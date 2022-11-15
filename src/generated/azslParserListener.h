@@ -32,6 +32,9 @@ public:
   virtual void enterNestedNameSpecifier(azslParser::NestedNameSpecifierContext *ctx) = 0;
   virtual void exitNestedNameSpecifier(azslParser::NestedNameSpecifierContext *ctx) = 0;
 
+  virtual void enterNamespaceStatement(azslParser::NamespaceStatementContext *ctx) = 0;
+  virtual void exitNamespaceStatement(azslParser::NamespaceStatementContext *ctx) = 0;
+
   virtual void enterClassDefinitionStatement(azslParser::ClassDefinitionStatementContext *ctx) = 0;
   virtual void exitClassDefinitionStatement(azslParser::ClassDefinitionStatementContext *ctx) = 0;
 
@@ -430,15 +433,6 @@ public:
 
   virtual void enterCompilerExtensionStatement(azslParser::CompilerExtensionStatementContext *ctx) = 0;
   virtual void exitCompilerExtensionStatement(azslParser::CompilerExtensionStatementContext *ctx) = 0;
-
-  virtual void enterSrgDefinition(azslParser::SrgDefinitionContext *ctx) = 0;
-  virtual void exitSrgDefinition(azslParser::SrgDefinitionContext *ctx) = 0;
-
-  virtual void enterAttributedSrgDefinition(azslParser::AttributedSrgDefinitionContext *ctx) = 0;
-  virtual void exitAttributedSrgDefinition(azslParser::AttributedSrgDefinitionContext *ctx) = 0;
-
-  virtual void enterSrgMemberDeclaration(azslParser::SrgMemberDeclarationContext *ctx) = 0;
-  virtual void exitSrgMemberDeclaration(azslParser::SrgMemberDeclarationContext *ctx) = 0;
 
   virtual void enterSrgSemantic(azslParser::SrgSemanticContext *ctx) = 0;
   virtual void exitSrgSemantic(azslParser::SrgSemanticContext *ctx) = 0;

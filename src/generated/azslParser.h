@@ -41,118 +41,118 @@ public:
     Int2x2 = 132, Int2x3 = 133, Int2x4 = 134, Int3x1 = 135, Int3x2 = 136, 
     Int3x3 = 137, Int3x4 = 138, Int4x1 = 139, Int4x2 = 140, Int4x3 = 141, 
     Int4x4 = 142, Interface = 143, Line_ = 144, LineAdj = 145, Linear = 146, 
-    LineStream = 147, Long = 148, Matrix = 149, Nointerpolation = 150, Noperspective = 151, 
-    Option = 152, Out = 153, OutputPatch = 154, Override = 155, Partial = 156, 
-    Packoffset = 157, Point = 158, PointStream = 159, Precise = 160, RasterizerOrderedBuffer = 161, 
-    RasterizerOrderedByteAddressBuffer = 162, RasterizerOrderedStructuredBuffer = 163, 
-    RasterizerOrderedTexture1D = 164, RasterizerOrderedTexture1DArray = 165, 
-    RasterizerOrderedTexture2D = 166, RasterizerOrderedTexture2DArray = 167, 
-    RasterizerOrderedTexture3D = 168, RayDesc = 169, RaytracingAccelerationStructure = 170, 
-    Register = 171, Return = 172, RowMajor = 173, RWBuffer = 174, RWByteAddressBuffer = 175, 
-    RWStructuredBuffer = 176, RWTexture1D = 177, RWTexture1DArray = 178, 
-    RWTexture2D = 179, RWTexture2DArray = 180, RWTexture3D = 181, Sample = 182, 
-    Sampler = 183, SamplerCapitalS = 184, SamplerComparisonState = 185, 
-    SamplerStateCamel = 186, SamplerState = 187, Shared = 188, SNorm = 189, 
-    Static = 190, Struct = 191, StructuredBuffer = 192, SubpassInput = 193, 
-    SubpassInputMS = 194, Switch = 195, TBuffer = 196, Texture1D = 197, 
-    Texture1DArray = 198, Texture2D = 199, Texture2DArray = 200, Texture2DMS = 201, 
-    Texture2DMSArray = 202, Texture3D = 203, TextureCube = 204, TextureCubeArray = 205, 
-    Triangle = 206, TriangleAdj = 207, TriangleStream = 208, Uniform = 209, 
-    Uint = 210, Uint1 = 211, Uint2 = 212, Uint3 = 213, Uint4 = 214, Uint1x1 = 215, 
-    Uint1x2 = 216, Uint1x3 = 217, Uint1x4 = 218, Uint2x1 = 219, Uint2x2 = 220, 
-    Uint2x3 = 221, Uint2x4 = 222, Uint3x1 = 223, Uint3x2 = 224, Uint3x3 = 225, 
-    Uint3x4 = 226, Uint4x1 = 227, Uint4x2 = 228, Uint4x3 = 229, Uint4x4 = 230, 
-    Uint16_t = 231, Uint32_t = 232, Uint64_t = 233, UNorm = 234, Unsigned = 235, 
-    Dword = 236, Dword1 = 237, Dword2 = 238, Dword3 = 239, Dword4 = 240, 
-    Dword1x1 = 241, Dword1x2 = 242, Dword1x3 = 243, Dword1x4 = 244, Dword2x1 = 245, 
-    Dword2x2 = 246, Dword2x3 = 247, Dword2x4 = 248, Dword3x1 = 249, Dword3x2 = 250, 
-    Dword3x3 = 251, Dword3x4 = 252, Dword4x1 = 253, Dword4x2 = 254, Dword4x3 = 255, 
-    Dword4x4 = 256, Vector = 257, Volatile = 258, Void = 259, While = 260, 
-    StateObjectConfig = 261, LocalRootSignature = 262, GlobalRootSignature = 263, 
-    SubobjectToExportsAssociation = 264, RaytracingShaderConfig = 265, RaytracingPipelineConfig = 266, 
-    RaytracingPipelineConfig1 = 267, TriangleHitGroup = 268, ProceduralPrimitiveHitGroup = 269, 
-    ADDRESS_U = 270, ADDRESS_V = 271, ADDRESS_W = 272, BORDER_COLOR = 273, 
-    MIN_FILTER = 274, MAG_FILTER = 275, MIP_FILTER = 276, MAX_ANISOTROPY = 277, 
-    MAX_LOD = 278, MIN_LOD = 279, MIP_LOD_BIAS = 280, COMPARISON_FUNC = 281, 
-    REDUCTION_TYPE = 282, FILTER_MODE_POINT = 283, FILTER_MODE_LINEAR = 284, 
-    REDUCTION_TYPE_FILTER = 285, REDUCTION_TYPE_COMPARISON = 286, REDUCTION_TYPE_MINIMUM = 287, 
-    REDUCTION_TYPE_MAXIMUM = 288, ADDRESS_MODE_WRAP = 289, ADDRESS_MODE_MIRROR = 290, 
-    ADDRESS_MODE_CLAMP = 291, ADDRESS_MODE_BORDER = 292, ADDRESS_MODE_MIRROR_ONCE = 293, 
-    COMPARISON_FUNCTION_NEVER = 294, COMPARISON_FUNCTION_LESS = 295, COMPARISON_FUNCTION_EQUAL = 296, 
-    COMPARISON_FUNCTION_LESS_EQUAL = 297, COMPARISON_FUNCTION_GREATER = 298, 
-    COMPARISON_FUNCTION_NOT_EQUAL = 299, COMPARISON_FUNCTION_GREATER_EQUAL = 300, 
-    COMPARISON_FUNCTION_ALWAYS = 301, BORDER_COLOR_OPAQUE_BLACK = 302, BORDER_COLOR_TRANSPARENT_BLACK = 303, 
-    BORDER_COLOR_OPAQUE_WHITE = 304, LeftParen = 305, RightParen = 306, 
-    LeftBracket = 307, RightBracket = 308, LeftBrace = 309, RightBrace = 310, 
-    LeftDoubleBracket = 311, Less = 312, LessEqual = 313, Greater = 314, 
-    GreaterEqual = 315, LeftShift = 316, RightShift = 317, Plus = 318, PlusPlus = 319, 
-    Minus = 320, MinusMinus = 321, Star = 322, Div = 323, Mod = 324, And = 325, 
-    Or = 326, AndAnd = 327, OrOr = 328, Caret = 329, Not = 330, Tilde = 331, 
-    Question = 332, Colon = 333, ColonColon = 334, Semi = 335, Comma = 336, 
-    Assign = 337, StarAssign = 338, DivAssign = 339, ModAssign = 340, PlusAssign = 341, 
-    MinusAssign = 342, LeftShiftAssign = 343, RightShiftAssign = 344, AndAssign = 345, 
-    XorAssign = 346, OrAssign = 347, Equal = 348, NotEqual = 349, Dot = 350, 
-    True = 351, False = 352, KW_AssociatedType = 353, KW_TypeAlias = 354, 
-    KW_Typedef = 355, KW_Fundamental = 356, KW_Typeof = 357, FrequencyId = 358, 
-    ShaderVariantFallback = 359, ShaderResourceGroupSemantic = 360, ShaderResourceGroup = 361, 
-    KW_ext_print_message = 362, KW_ext_print_symbol = 363, KW_ext_prtsym_fully_qualified = 364, 
-    KW_ext_prtsym_least_qualified = 365, KW_ext_prtsym_constint_value = 366, 
-    HLSLSemanticStream = 367, HLSLSemanticSystem = 368, Identifier = 369, 
-    IntegerLiteral = 370, FloatLiteral = 371, StringLiteral = 372, PragmaDirective = 373, 
-    LineDirective = 374, Whitespace = 375, Newline = 376, BlockComment = 377, 
-    LineComment = 378
+    LineStream = 147, Long = 148, Matrix = 149, Namespace = 150, Nointerpolation = 151, 
+    Noperspective = 152, Option = 153, Out = 154, OutputPatch = 155, Override = 156, 
+    Partial = 157, Packoffset = 158, Point = 159, PointStream = 160, Precise = 161, 
+    RasterizerOrderedBuffer = 162, RasterizerOrderedByteAddressBuffer = 163, 
+    RasterizerOrderedStructuredBuffer = 164, RasterizerOrderedTexture1D = 165, 
+    RasterizerOrderedTexture1DArray = 166, RasterizerOrderedTexture2D = 167, 
+    RasterizerOrderedTexture2DArray = 168, RasterizerOrderedTexture3D = 169, 
+    RayDesc = 170, RaytracingAccelerationStructure = 171, Register = 172, 
+    Return = 173, RowMajor = 174, RWBuffer = 175, RWByteAddressBuffer = 176, 
+    RWStructuredBuffer = 177, RWTexture1D = 178, RWTexture1DArray = 179, 
+    RWTexture2D = 180, RWTexture2DArray = 181, RWTexture3D = 182, Sample = 183, 
+    Sampler = 184, SamplerCapitalS = 185, SamplerComparisonState = 186, 
+    SamplerStateCamel = 187, SamplerState = 188, Shared = 189, SNorm = 190, 
+    Static = 191, Struct = 192, StructuredBuffer = 193, SubpassInput = 194, 
+    SubpassInputMS = 195, Switch = 196, TBuffer = 197, Texture1D = 198, 
+    Texture1DArray = 199, Texture2D = 200, Texture2DArray = 201, Texture2DMS = 202, 
+    Texture2DMSArray = 203, Texture3D = 204, TextureCube = 205, TextureCubeArray = 206, 
+    Triangle = 207, TriangleAdj = 208, TriangleStream = 209, Uniform = 210, 
+    Uint = 211, Uint1 = 212, Uint2 = 213, Uint3 = 214, Uint4 = 215, Uint1x1 = 216, 
+    Uint1x2 = 217, Uint1x3 = 218, Uint1x4 = 219, Uint2x1 = 220, Uint2x2 = 221, 
+    Uint2x3 = 222, Uint2x4 = 223, Uint3x1 = 224, Uint3x2 = 225, Uint3x3 = 226, 
+    Uint3x4 = 227, Uint4x1 = 228, Uint4x2 = 229, Uint4x3 = 230, Uint4x4 = 231, 
+    Uint16_t = 232, Uint32_t = 233, Uint64_t = 234, UNorm = 235, Unsigned = 236, 
+    Dword = 237, Dword1 = 238, Dword2 = 239, Dword3 = 240, Dword4 = 241, 
+    Dword1x1 = 242, Dword1x2 = 243, Dword1x3 = 244, Dword1x4 = 245, Dword2x1 = 246, 
+    Dword2x2 = 247, Dword2x3 = 248, Dword2x4 = 249, Dword3x1 = 250, Dword3x2 = 251, 
+    Dword3x3 = 252, Dword3x4 = 253, Dword4x1 = 254, Dword4x2 = 255, Dword4x3 = 256, 
+    Dword4x4 = 257, Vector = 258, Volatile = 259, Void = 260, While = 261, 
+    StateObjectConfig = 262, LocalRootSignature = 263, GlobalRootSignature = 264, 
+    SubobjectToExportsAssociation = 265, RaytracingShaderConfig = 266, RaytracingPipelineConfig = 267, 
+    RaytracingPipelineConfig1 = 268, TriangleHitGroup = 269, ProceduralPrimitiveHitGroup = 270, 
+    ADDRESS_U = 271, ADDRESS_V = 272, ADDRESS_W = 273, BORDER_COLOR = 274, 
+    MIN_FILTER = 275, MAG_FILTER = 276, MIP_FILTER = 277, MAX_ANISOTROPY = 278, 
+    MAX_LOD = 279, MIN_LOD = 280, MIP_LOD_BIAS = 281, COMPARISON_FUNC = 282, 
+    REDUCTION_TYPE = 283, FILTER_MODE_POINT = 284, FILTER_MODE_LINEAR = 285, 
+    REDUCTION_TYPE_FILTER = 286, REDUCTION_TYPE_COMPARISON = 287, REDUCTION_TYPE_MINIMUM = 288, 
+    REDUCTION_TYPE_MAXIMUM = 289, ADDRESS_MODE_WRAP = 290, ADDRESS_MODE_MIRROR = 291, 
+    ADDRESS_MODE_CLAMP = 292, ADDRESS_MODE_BORDER = 293, ADDRESS_MODE_MIRROR_ONCE = 294, 
+    COMPARISON_FUNCTION_NEVER = 295, COMPARISON_FUNCTION_LESS = 296, COMPARISON_FUNCTION_EQUAL = 297, 
+    COMPARISON_FUNCTION_LESS_EQUAL = 298, COMPARISON_FUNCTION_GREATER = 299, 
+    COMPARISON_FUNCTION_NOT_EQUAL = 300, COMPARISON_FUNCTION_GREATER_EQUAL = 301, 
+    COMPARISON_FUNCTION_ALWAYS = 302, BORDER_COLOR_OPAQUE_BLACK = 303, BORDER_COLOR_TRANSPARENT_BLACK = 304, 
+    BORDER_COLOR_OPAQUE_WHITE = 305, LeftParen = 306, RightParen = 307, 
+    LeftBracket = 308, RightBracket = 309, LeftBrace = 310, RightBrace = 311, 
+    LeftDoubleBracket = 312, Less = 313, LessEqual = 314, Greater = 315, 
+    GreaterEqual = 316, LeftShift = 317, RightShift = 318, Plus = 319, PlusPlus = 320, 
+    Minus = 321, MinusMinus = 322, Star = 323, Div = 324, Mod = 325, And = 326, 
+    Or = 327, AndAnd = 328, OrOr = 329, Caret = 330, Not = 331, Tilde = 332, 
+    Question = 333, Colon = 334, ColonColon = 335, Semi = 336, Comma = 337, 
+    Assign = 338, StarAssign = 339, DivAssign = 340, ModAssign = 341, PlusAssign = 342, 
+    MinusAssign = 343, LeftShiftAssign = 344, RightShiftAssign = 345, AndAssign = 346, 
+    XorAssign = 347, OrAssign = 348, Equal = 349, NotEqual = 350, Dot = 351, 
+    True = 352, False = 353, KW_AssociatedType = 354, KW_TypeAlias = 355, 
+    KW_Typedef = 356, KW_Fundamental = 357, KW_Typeof = 358, FrequencyId = 359, 
+    ShaderVariantFallback = 360, ShaderResourceGroupSemantic = 361, ShaderResourceGroup = 362, 
+    KW_ext_print_message = 363, KW_ext_print_symbol = 364, KW_ext_prtsym_fully_qualified = 365, 
+    KW_ext_prtsym_least_qualified = 366, KW_ext_prtsym_constint_value = 367, 
+    HLSLSemanticStream = 368, HLSLSemanticSystem = 369, Identifier = 370, 
+    IntegerLiteral = 371, FloatLiteral = 372, StringLiteral = 373, PragmaDirective = 374, 
+    LineDirective = 375, Whitespace = 376, Newline = 377, BlockComment = 378, 
+    LineComment = 379
   };
 
   enum {
     RuleCompilationUnit = 0, RuleTopLevelDeclaration = 1, RuleIdExpression = 2, 
     RuleUnqualifiedId = 3, RuleQualifiedId = 4, RuleNestedNameSpecifier = 5, 
-    RuleClassDefinitionStatement = 6, RuleClassDefinition = 7, RuleBaseList = 8, 
-    RuleClassMemberDeclaration = 9, RuleStructDefinitionStatement = 10, 
-    RuleStructDefinition = 11, RuleStructMemberDeclaration = 12, RuleAnyStructuredTypeDefinitionStatement = 13, 
-    RuleEnumDefinitionStatement = 14, RuleEnumDefinition = 15, RuleEnumKey = 16, 
-    RuleEnumeratorListDefinition = 17, RuleEnumeratorDeclarator = 18, RuleAnyStructuredTypeDefinition = 19, 
-    RuleInterfaceDefinitionStatement = 20, RuleInterfaceDefinition = 21, 
-    RuleInterfaceMemberDeclaration = 22, RuleConstantBufferTemplated = 23, 
-    RuleVariableDeclarationStatement = 24, RuleFunctionParams = 25, RuleFunctionParam = 26, 
-    RuleHlslSemantic = 27, RuleHlslSemanticName = 28, RuleAttributeArguments = 29, 
-    RuleAttributeArgumentList = 30, RuleAttribute = 31, RuleAttributeSpecifier = 32, 
-    RuleAttributeSpecifierSequence = 33, RuleAttributeSpecifierAny = 34, 
-    RuleBlock = 35, RuleStatement = 36, RuleForInitializer = 37, RuleSwitchLabel = 38, 
-    RuleSwitchSection = 39, RuleSwitchBlock = 40, RuleEmbeddedStatement = 41, 
-    RuleElseClause = 42, RuleExpression = 43, RuleExpressionExt = 44, RulePostfixUnaryOperator = 45, 
-    RulePrefixUnaryOperator = 46, RuleBinaryOperator = 47, RuleAssignmentOperator = 48, 
-    RuleArgumentList = 49, RuleArguments = 50, RuleVariableDeclaration = 51, 
-    RuleVariableDeclarators = 52, RuleUnnamedVariableDeclarator = 53, RuleNamedVariableDeclarator = 54, 
-    RuleVariableInitializer = 55, RuleStandardVariableInitializer = 56, 
-    RuleArrayElementInitializers = 57, RuleArrayRankSpecifier = 58, RulePackOffsetNode = 59, 
-    RuleStorageFlags = 60, RuleStorageFlag = 61, RuleType = 62, RulePredefinedType = 63, 
-    RuleSubobjectType = 64, RuleOtherViewResourceType = 65, RuleRtxBuiltInTypes = 66, 
-    RuleBufferPredefinedType = 67, RuleBufferType = 68, RuleByteAddressBufferTypes = 69, 
-    RulePatchPredefinedType = 70, RulePatchType = 71, RuleSamplerStatePredefinedType = 72, 
-    RuleScalarType = 73, RuleStreamOutputPredefinedType = 74, RuleStreamOutputObjectType = 75, 
-    RuleStructuredBufferPredefinedType = 76, RuleStructuredBufferName = 77, 
-    RuleTextureType = 78, RuleTexturePredefinedType = 79, RuleGenericTexturePredefinedType = 80, 
-    RuleTextureTypeMS = 81, RuleMsTexturePredefinedType = 82, RuleVectorType = 83, 
-    RuleGenericVectorType = 84, RuleScalarOrVectorType = 85, RuleScalarOrVectorOrMatrixType = 86, 
-    RuleMatrixType = 87, RuleGenericMatrixPredefinedType = 88, RuleRegisterAllocation = 89, 
-    RuleSamplerStateProperty = 90, RuleLiteral = 91, RuleLeadingTypeFunctionSignature = 92, 
-    RuleHlslFunctionDefinition = 93, RuleHlslFunctionDeclaration = 94, RuleUserDefinedType = 95, 
-    RuleAssociatedTypeDeclaration = 96, RuleTypedefStatement = 97, RuleTypealiasStatement = 98, 
-    RuleTypeAliasingDefinitionStatement = 99, RuleTypeofExpression = 100, 
-    RuleGenericParameterList = 101, RuleGenericTypeDefinition = 102, RuleGenericConstraint = 103, 
-    RuleLanguageDefinedConstraint = 104, RuleFunctionDeclaration = 105, 
-    RuleAttributedFunctionDeclaration = 106, RuleFunctionDefinition = 107, 
-    RuleAttributedFunctionDefinition = 108, RuleCompilerExtensionStatement = 109, 
-    RuleSrgDefinition = 110, RuleAttributedSrgDefinition = 111, RuleSrgMemberDeclaration = 112, 
-    RuleSrgSemantic = 113, RuleAttributedSrgSemantic = 114, RuleSrgSemanticBodyDeclaration = 115, 
-    RuleSrgSemanticMemberDeclaration = 116, RuleSamplerBodyDeclaration = 117, 
-    RuleSamplerMemberDeclaration = 118, RuleMaxAnisotropyOption = 119, RuleMinFilterOption = 120, 
-    RuleMagFilterOption = 121, RuleMipFilterOption = 122, RuleReductionTypeOption = 123, 
-    RuleComparisonFunctionOption = 124, RuleAddressUOption = 125, RuleAddressVOption = 126, 
-    RuleAddressWOption = 127, RuleMinLodOption = 128, RuleMaxLodOption = 129, 
-    RuleMipLodBiasOption = 130, RuleBorderColorOption = 131, RuleFilterModeEnum = 132, 
-    RuleReductionTypeEnum = 133, RuleAddressModeEnum = 134, RuleComparisonFunctionEnum = 135, 
-    RuleBorderColorEnum = 136
+    RuleNamespaceStatement = 6, RuleClassDefinitionStatement = 7, RuleClassDefinition = 8, 
+    RuleBaseList = 9, RuleClassMemberDeclaration = 10, RuleStructDefinitionStatement = 11, 
+    RuleStructDefinition = 12, RuleStructMemberDeclaration = 13, RuleAnyStructuredTypeDefinitionStatement = 14, 
+    RuleEnumDefinitionStatement = 15, RuleEnumDefinition = 16, RuleEnumKey = 17, 
+    RuleEnumeratorListDefinition = 18, RuleEnumeratorDeclarator = 19, RuleAnyStructuredTypeDefinition = 20, 
+    RuleInterfaceDefinitionStatement = 21, RuleInterfaceDefinition = 22, 
+    RuleInterfaceMemberDeclaration = 23, RuleConstantBufferTemplated = 24, 
+    RuleVariableDeclarationStatement = 25, RuleFunctionParams = 26, RuleFunctionParam = 27, 
+    RuleHlslSemantic = 28, RuleHlslSemanticName = 29, RuleAttributeArguments = 30, 
+    RuleAttributeArgumentList = 31, RuleAttribute = 32, RuleAttributeSpecifier = 33, 
+    RuleAttributeSpecifierSequence = 34, RuleAttributeSpecifierAny = 35, 
+    RuleBlock = 36, RuleStatement = 37, RuleForInitializer = 38, RuleSwitchLabel = 39, 
+    RuleSwitchSection = 40, RuleSwitchBlock = 41, RuleEmbeddedStatement = 42, 
+    RuleElseClause = 43, RuleExpression = 44, RuleExpressionExt = 45, RulePostfixUnaryOperator = 46, 
+    RulePrefixUnaryOperator = 47, RuleBinaryOperator = 48, RuleAssignmentOperator = 49, 
+    RuleArgumentList = 50, RuleArguments = 51, RuleVariableDeclaration = 52, 
+    RuleVariableDeclarators = 53, RuleUnnamedVariableDeclarator = 54, RuleNamedVariableDeclarator = 55, 
+    RuleVariableInitializer = 56, RuleStandardVariableInitializer = 57, 
+    RuleArrayElementInitializers = 58, RuleArrayRankSpecifier = 59, RulePackOffsetNode = 60, 
+    RuleStorageFlags = 61, RuleStorageFlag = 62, RuleType = 63, RulePredefinedType = 64, 
+    RuleSubobjectType = 65, RuleOtherViewResourceType = 66, RuleRtxBuiltInTypes = 67, 
+    RuleBufferPredefinedType = 68, RuleBufferType = 69, RuleByteAddressBufferTypes = 70, 
+    RulePatchPredefinedType = 71, RulePatchType = 72, RuleSamplerStatePredefinedType = 73, 
+    RuleScalarType = 74, RuleStreamOutputPredefinedType = 75, RuleStreamOutputObjectType = 76, 
+    RuleStructuredBufferPredefinedType = 77, RuleStructuredBufferName = 78, 
+    RuleTextureType = 79, RuleTexturePredefinedType = 80, RuleGenericTexturePredefinedType = 81, 
+    RuleTextureTypeMS = 82, RuleMsTexturePredefinedType = 83, RuleVectorType = 84, 
+    RuleGenericVectorType = 85, RuleScalarOrVectorType = 86, RuleScalarOrVectorOrMatrixType = 87, 
+    RuleMatrixType = 88, RuleGenericMatrixPredefinedType = 89, RuleRegisterAllocation = 90, 
+    RuleSamplerStateProperty = 91, RuleLiteral = 92, RuleLeadingTypeFunctionSignature = 93, 
+    RuleHlslFunctionDefinition = 94, RuleHlslFunctionDeclaration = 95, RuleUserDefinedType = 96, 
+    RuleAssociatedTypeDeclaration = 97, RuleTypedefStatement = 98, RuleTypealiasStatement = 99, 
+    RuleTypeAliasingDefinitionStatement = 100, RuleTypeofExpression = 101, 
+    RuleGenericParameterList = 102, RuleGenericTypeDefinition = 103, RuleGenericConstraint = 104, 
+    RuleLanguageDefinedConstraint = 105, RuleFunctionDeclaration = 106, 
+    RuleAttributedFunctionDeclaration = 107, RuleFunctionDefinition = 108, 
+    RuleAttributedFunctionDefinition = 109, RuleCompilerExtensionStatement = 110, 
+    RuleSrgSemantic = 111, RuleAttributedSrgSemantic = 112, RuleSrgSemanticBodyDeclaration = 113, 
+    RuleSrgSemanticMemberDeclaration = 114, RuleSamplerBodyDeclaration = 115, 
+    RuleSamplerMemberDeclaration = 116, RuleMaxAnisotropyOption = 117, RuleMinFilterOption = 118, 
+    RuleMagFilterOption = 119, RuleMipFilterOption = 120, RuleReductionTypeOption = 121, 
+    RuleComparisonFunctionOption = 122, RuleAddressUOption = 123, RuleAddressVOption = 124, 
+    RuleAddressWOption = 125, RuleMinLodOption = 126, RuleMaxLodOption = 127, 
+    RuleMipLodBiasOption = 128, RuleBorderColorOption = 129, RuleFilterModeEnum = 130, 
+    RuleReductionTypeEnum = 131, RuleAddressModeEnum = 132, RuleComparisonFunctionEnum = 133, 
+    RuleBorderColorEnum = 134
   };
 
   explicit azslParser(antlr4::TokenStream *input);
@@ -171,6 +171,7 @@ public:
   class UnqualifiedIdContext;
   class QualifiedIdContext;
   class NestedNameSpecifierContext;
+  class NamespaceStatementContext;
   class ClassDefinitionStatementContext;
   class ClassDefinitionContext;
   class BaseListContext;
@@ -275,9 +276,6 @@ public:
   class FunctionDefinitionContext;
   class AttributedFunctionDefinitionContext;
   class CompilerExtensionStatementContext;
-  class SrgDefinitionContext;
-  class AttributedSrgDefinitionContext;
-  class SrgMemberDeclarationContext;
   class SrgSemanticContext;
   class AttributedSrgSemanticContext;
   class SrgSemanticBodyDeclarationContext;
@@ -324,6 +322,7 @@ public:
   public:
     TopLevelDeclarationContext(antlr4::ParserRuleContext *parent, size_t invokingState);
     virtual size_t getRuleIndex() const override;
+    NamespaceStatementContext *namespaceStatement();
     AnyStructuredTypeDefinitionStatementContext *anyStructuredTypeDefinitionStatement();
     VariableDeclarationStatementContext *variableDeclarationStatement();
     AttributedFunctionDefinitionContext *attributedFunctionDefinition();
@@ -331,7 +330,6 @@ public:
     AttributeSpecifierSequenceContext *attributeSpecifierSequence();
     CompilerExtensionStatementContext *compilerExtensionStatement();
     TypeAliasingDefinitionStatementContext *typeAliasingDefinitionStatement();
-    AttributedSrgDefinitionContext *attributedSrgDefinition();
     AttributedSrgSemanticContext *attributedSrgSemantic();
     antlr4::tree::TerminalNode *Semi();
 
@@ -399,6 +397,25 @@ public:
   };
 
   NestedNameSpecifierContext* nestedNameSpecifier();
+
+  class  NamespaceStatementContext : public antlr4::ParserRuleContext {
+  public:
+    azslParser::IdExpressionContext *Name = nullptr;
+    NamespaceStatementContext(antlr4::ParserRuleContext *parent, size_t invokingState);
+    virtual size_t getRuleIndex() const override;
+    antlr4::tree::TerminalNode *Namespace();
+    antlr4::tree::TerminalNode *LeftBrace();
+    antlr4::tree::TerminalNode *RightBrace();
+    std::vector<TopLevelDeclarationContext *> topLevelDeclaration();
+    TopLevelDeclarationContext* topLevelDeclaration(size_t i);
+    IdExpressionContext *idExpression();
+
+    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
+    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
+   
+  };
+
+  NamespaceStatementContext* namespaceStatement();
 
   class  ClassDefinitionStatementContext : public antlr4::ParserRuleContext {
   public:
@@ -850,7 +867,7 @@ public:
   public:
     GlobalAttributeContext(AttributeContext *ctx);
 
-    antlr4::Token *Namespace = nullptr;
+    antlr4::Token *AttributeNamespace = nullptr;
     antlr4::Token *Name = nullptr;
     antlr4::tree::TerminalNode *Global();
     std::vector<antlr4::tree::TerminalNode *> ColonColon();
@@ -866,7 +883,7 @@ public:
   public:
     AttachedAttributeContext(AttributeContext *ctx);
 
-    antlr4::Token *Namespace = nullptr;
+    antlr4::Token *AttributeNamespace = nullptr;
     antlr4::Token *Name = nullptr;
     std::vector<antlr4::tree::TerminalNode *> Identifier();
     antlr4::tree::TerminalNode* Identifier(size_t i);
@@ -2760,63 +2777,6 @@ public:
   };
 
   CompilerExtensionStatementContext* compilerExtensionStatement();
-
-  class  SrgDefinitionContext : public antlr4::ParserRuleContext {
-  public:
-    antlr4::Token *Name = nullptr;
-    antlr4::Token *Semantic = nullptr;
-    SrgDefinitionContext(antlr4::ParserRuleContext *parent, size_t invokingState);
-    virtual size_t getRuleIndex() const override;
-    antlr4::tree::TerminalNode *ShaderResourceGroup();
-    antlr4::tree::TerminalNode *LeftBrace();
-    antlr4::tree::TerminalNode *RightBrace();
-    std::vector<antlr4::tree::TerminalNode *> Identifier();
-    antlr4::tree::TerminalNode* Identifier(size_t i);
-    antlr4::tree::TerminalNode *Partial();
-    antlr4::tree::TerminalNode *Colon();
-    std::vector<SrgMemberDeclarationContext *> srgMemberDeclaration();
-    SrgMemberDeclarationContext* srgMemberDeclaration(size_t i);
-
-    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
-    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
-   
-  };
-
-  SrgDefinitionContext* srgDefinition();
-
-  class  AttributedSrgDefinitionContext : public antlr4::ParserRuleContext {
-  public:
-    AttributedSrgDefinitionContext(antlr4::ParserRuleContext *parent, size_t invokingState);
-    virtual size_t getRuleIndex() const override;
-    SrgDefinitionContext *srgDefinition();
-    std::vector<AttributeSpecifierAnyContext *> attributeSpecifierAny();
-    AttributeSpecifierAnyContext* attributeSpecifierAny(size_t i);
-
-    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
-    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
-   
-  };
-
-  AttributedSrgDefinitionContext* attributedSrgDefinition();
-
-  class  SrgMemberDeclarationContext : public antlr4::ParserRuleContext {
-  public:
-    SrgMemberDeclarationContext(antlr4::ParserRuleContext *parent, size_t invokingState);
-    virtual size_t getRuleIndex() const override;
-    StructDefinitionStatementContext *structDefinitionStatement();
-    AttributedFunctionDeclarationContext *attributedFunctionDeclaration();
-    AttributedFunctionDefinitionContext *attributedFunctionDefinition();
-    VariableDeclarationStatementContext *variableDeclarationStatement();
-    EnumDefinitionStatementContext *enumDefinitionStatement();
-    TypeAliasingDefinitionStatementContext *typeAliasingDefinitionStatement();
-    AttributeSpecifierAnyContext *attributeSpecifierAny();
-
-    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
-    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
-   
-  };
-
-  SrgMemberDeclarationContext* srgMemberDeclaration();
 
   class  SrgSemanticContext : public antlr4::ParserRuleContext {
   public:

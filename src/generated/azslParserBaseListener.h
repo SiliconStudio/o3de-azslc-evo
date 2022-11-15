@@ -34,6 +34,9 @@ public:
   virtual void enterNestedNameSpecifier(azslParser::NestedNameSpecifierContext * /*ctx*/) override { }
   virtual void exitNestedNameSpecifier(azslParser::NestedNameSpecifierContext * /*ctx*/) override { }
 
+  virtual void enterNamespaceStatement(azslParser::NamespaceStatementContext * /*ctx*/) override { }
+  virtual void exitNamespaceStatement(azslParser::NamespaceStatementContext * /*ctx*/) override { }
+
   virtual void enterClassDefinitionStatement(azslParser::ClassDefinitionStatementContext * /*ctx*/) override { }
   virtual void exitClassDefinitionStatement(azslParser::ClassDefinitionStatementContext * /*ctx*/) override { }
 
@@ -432,15 +435,6 @@ public:
 
   virtual void enterCompilerExtensionStatement(azslParser::CompilerExtensionStatementContext * /*ctx*/) override { }
   virtual void exitCompilerExtensionStatement(azslParser::CompilerExtensionStatementContext * /*ctx*/) override { }
-
-  virtual void enterSrgDefinition(azslParser::SrgDefinitionContext * /*ctx*/) override { }
-  virtual void exitSrgDefinition(azslParser::SrgDefinitionContext * /*ctx*/) override { }
-
-  virtual void enterAttributedSrgDefinition(azslParser::AttributedSrgDefinitionContext * /*ctx*/) override { }
-  virtual void exitAttributedSrgDefinition(azslParser::AttributedSrgDefinitionContext * /*ctx*/) override { }
-
-  virtual void enterSrgMemberDeclaration(azslParser::SrgMemberDeclarationContext * /*ctx*/) override { }
-  virtual void exitSrgMemberDeclaration(azslParser::SrgMemberDeclarationContext * /*ctx*/) override { }
 
   virtual void enterSrgSemantic(azslParser::SrgSemanticContext * /*ctx*/) override { }
   virtual void exitSrgSemantic(azslParser::SrgSemanticContext * /*ctx*/) override { }
