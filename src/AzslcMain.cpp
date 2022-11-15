@@ -19,11 +19,11 @@ namespace StdFs = std::filesystem;
 
 // versioning
 // Correspond to the supported version of the AZSL language.
-#define AZSLC_MAJOR "1"
+#define AZSLC_MAJOR "2"   // evolution prototype
 // For large features or milestones. Minor version allows for breaking changes. Existing tests can change.
-#define AZSLC_MINOR "8"   // last change: introduction of class inheritance
+#define AZSLC_MINOR "0"
 // For small features or bug fixes. They cannot introduce breaking changes. Existing tests shouldn't change.
-#define AZSLC_REVISION "12"  // last change: reduce useless sharp-line directives
+#define AZSLC_REVISION "2"
 
 
 namespace AZ::ShaderCompiler

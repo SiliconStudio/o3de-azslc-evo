@@ -157,6 +157,7 @@ Linear : 'linear';
 LineStream : 'LineStream';
 Long : 'long';
 Matrix : 'matrix';
+Namespace : 'namespace';
 Nointerpolation : 'nointerpolation';
 Noperspective : 'noperspective';
 Option : 'option';

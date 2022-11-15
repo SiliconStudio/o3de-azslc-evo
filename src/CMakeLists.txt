@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
-project (Azslc)
+project (Azslc2)
 
 include(FetchContent)
 
@@ -63,12 +63,12 @@ set( TINY_OPTIONAL_INCLUDE_DIRS
   ${PROJECT_SOURCE_DIR}/external/tiny
 )
 
-add_executable(azslc ${azslc_LocalSRC} ${azslc_PlatformSRC} ${azslc_GeneratedSrc} ${azslc_ExternalSRC})
+add_executable(azslc2 ${azslc_LocalSRC} ${azslc_PlatformSRC} ${azslc_GeneratedSrc} ${azslc_ExternalSRC})
 
-target_compile_features(azslc PRIVATE cxx_std_17)
+target_compile_features(azslc2 PRIVATE cxx_std_17)
 
 target_include_directories(
-  azslc
+  azslc2
   PRIVATE
   ${PROJECT_SOURCE_DIR}
   ${PROJECT_SOURCE_DIR}/external
@@ -77,43 +77,43 @@ target_include_directories(
   ${TINY_OPTIONAL_INCLUDE_DIRS}
 )
 
-source_group("azslc" FILES ${azslc_LocalSRC})
+source_group("azslc2" FILES ${azslc_LocalSRC})
 source_group("generated" FILES ${azslc_GeneratedSrc})
 source_group("external" FILES ${azslc_ExternalSRC})
 source_group("platforms" FILES ${azslc_PlatformSRC})
 
 if (MSVC)
-  set_property(TARGET azslc PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-  target_compile_options(azslc
+  set_property(TARGET azslc2 PROPERTY MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+  target_compile_options(azslc2
     PRIVATE
     "/MP" # Build with multiple processes
     "/permissive-"
     "/Zc:__cplusplus"
     "/utf-8")
-  target_compile_definitions(azslc
+  target_compile_definitions(azslc2
     PRIVATE
     _CRT_SECURE_NO_WARNINGS
     _SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING
     ANTLR4CPP_STATIC)
 elseif (UNIX AND NOT APPLE)
-  target_link_libraries(azslc PRIVATE stdc++fs)
+  target_link_libraries(azslc2 PRIVATE stdc++fs)
 endif()
 
-target_link_libraries(azslc PRIVATE CLI11::CLI11 antlr4_static)
+target_link_libraries(azslc2 PRIVATE CLI11::CLI11 antlr4_static)
 
 if (MSVC)
-  add_custom_command(TARGET azslc POST_BUILD
+  add_custom_command(TARGET azslc2 POST_BUILD
       COMMAND ${CMAKE_COMMAND} -E make_directory "${PROJECT_SOURCE_DIR}/../bin/${buildPlatform}/$(Configuration)"
-      COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_BINARY_DIR}/$(Configuration)/azslc.exe" "${PROJECT_SOURCE_DIR}/../bin/${buildPlatform}/$(Configuration)"
+      COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_BINARY_DIR}/$(Configuration)/azslc2.exe" "${PROJECT_SOURCE_DIR}/../bin/${buildPlatform}/$(Configuration)"
 )
 endif()
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
-set_target_properties( azslc
+set_target_properties( azslc2
     PROPERTIES
     EXECUTABLE_OUTPUT_PATH "${CMAKE_BINARY_DIR}/"
     LIBRARY_OUTPUT_PATH "${CMAKE_BINARY_DIR}/"
 )
 
-set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT azslc)
+set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT azslc2)

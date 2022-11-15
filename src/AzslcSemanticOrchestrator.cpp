@@ -542,7 +542,8 @@ namespace AZ::ShaderCompiler
         }
         // get enclosing scope:
         auto& [curScopeId, curScopeKind] = GetCurrentScopeIdAndKind();
-        bool enclosedBySRG = curScopeKind.GetKind() == Kind::ShaderResourceGroup;
+        bool enclosedBySRG = curScopeKind.GetKind() == Kind::ShaderResourceGroup
+            || (curScopeKind.GetKind() == Kind::Namespace && m_symbols->GetAttribute(curScopeId, "SRG").has_value());
 
         assert(!curScopeKind.IsKindOneOf(Kind::Enum)); // should use RegisterEnumerator
 
@@ -698,7 +699,10 @@ namespace AZ::ShaderCompiler
         }
 
         auto& [srgUid, srgKind] = GetCurrentScopeIdAndKind();
-        auto& srgInfo = srgKind.GetSubRefAs<SRGInfo>();
+        string srgInfoName = string{GetParentName(srgUid.m_name)} + "srginfo_" + srgUid.GetNameLeaf();
+        srgInfoName = Replace(srgInfoName, "$namespace_", "");
+        auto srgInfoUID = IdentifierUID{QualifiedName{srgInfoName}};
+        auto& srgInfo = *m_symbols->GetAsSub<SRGInfo>(srgInfoUID);
 
         TypeClass typeClass = varInfo.GetTypeClass();
         assert(typeClass != TypeClass::Alias);
@@ -889,8 +893,10 @@ namespace AZ::ShaderCompiler
         return desc;
     }
 
-    IdAndKind& SemanticOrchestrator::RegisterSRG(AstSRGDeclNode* ctx)
+    IdAndKind& SemanticOrchestrator::RegisterSRG(ParserRuleContext* ctx)
     {
+        // TODO-AZSLC2
+        /*
         auto const& idText = ctx->Name->getText();
         size_t line        = ctx->Name->getLine();
         verboseCout << line << ": srg decl: " << idText << "\n";
@@ -925,7 +931,9 @@ namespace AZ::ShaderCompiler
         SRGInfo& srgInfo   = info.GetSubAfterInitAs<Kind::ShaderResourceGroup>();
         srgInfo.m_declNode = ctx;
         srgInfo.m_implicitStruct.m_kind = Kind::Struct;
-        return symbol;
+        return symbol;*/
+        static IdAndKind z;
+        return z;
     }
 
     void SemanticOrchestrator::RegisterBases(azslParser::BaseListContext* ctx)
@@ -1482,8 +1490,10 @@ namespace AZ::ShaderCompiler
         }
     }
 
-    void SemanticOrchestrator::ValidateSrg(azslParser::SrgDefinitionContext* ctx) noexcept(false)
+    void SemanticOrchestrator::ValidateSrg(ParserRuleContext* ctx) noexcept(false)
     {
+        // TODO-AZSLC2
+        /*
         auto& srgInfo = GetCurrentScopeSubInfoAs<SRGInfo>();
 
         if (ctx->Semantic)
@@ -1624,6 +1634,7 @@ namespace AZ::ShaderCompiler
                                  " must be a struct, but seen as ", Kind::ToStr(kind.GetKind()).data())};
             }
         }
+        */
     }
 
     optional<int64_t> SemanticOrchestrator::TryFoldSRGSemantic(azslParser::SrgSemanticContext* ctx, size_t semanticTokenType, bool required)
@@ -1981,10 +1992,31 @@ namespace AZ::ShaderCompiler
         return scopeKind.IsKindOneOf(Kind::Struct, Kind::Class, Kind::Interface);
     }
 
-    void SemanticOrchestrator::MakeAndEnterAnonymousScope(string_view decorationPrefix, Token* scopeFirstToken)
+    void SemanticOrchestrator::MakeAndEnterAnonymousScope(string_view decorationPrefix, Token* scopeFirstToken, ParserRuleContext* ctx)
     {
         UnqualifiedName unnamedBlockCode{ConcatString("$", decorationPrefix, m_anonymousCounter)};
-        AddIdentifier(unnamedBlockCode, Kind::Namespace, scopeFirstToken->getLine());
+        auto& [id, kind] = AddIdentifier(unnamedBlockCode, Kind::Namespace, scopeFirstToken->getLine());
+        if (optional<AttributeInfo> attr = m_symbols->GetAttribute(id, "SRG"))
+        {
+            string semantic = std::get<string>(attr->m_argList.front());
+            
+            // register a fake SRG
+
+            string idText      = Replace(string{decorationPrefix}, "namespace_", "srginfo_") + ToString(m_anonymousCounter);
+            size_t line        = scopeFirstToken->getLine();
+            verboseCout << line << ": fake srg decl: " << idText << "\n";
+            auto uqNameView    = UnqualifiedNameView{ idText };
+            IdAndKind* srgSym  = LookupSymbol(uqNameView);
+            if (!srgSym) // already exists (case of partial)
+            {
+                auto& symbol = AddIdentifier(uqNameView, Kind::ShaderResourceGroup, line);
+                // now fillup what we can about the kindinfo:
+                auto& [uid, info] = symbol;
+                SRGInfo& srgInfo = info.GetSubAfterInitAs<Kind::ShaderResourceGroup>();
+                srgInfo.m_declNode = ctx;
+                srgInfo.m_implicitStruct.m_kind = Kind::Struct;
+            }
+        }
         m_scope->EnterScope(unnamedBlockCode, scopeFirstToken->getTokenIndex());
         ++m_anonymousCounter;
     }

@@ -47,8 +47,8 @@ namespace AZ::ShaderCompiler
     using AstInterfaceDeclNode          = azslParser::InterfaceDefinitionContext;
     using AstSRGSemanticDeclNode        = azslParser::SrgSemanticContext;
     using AstSRGSemanticMemberDeclNode  = azslParser::SrgSemanticMemberDeclarationContext;
-    using AstSRGDeclNode                = azslParser::SrgDefinitionContext;
-    using AstSRGMemberNode              = azslParser::SrgMemberDeclarationContext;
+    //using AstSRGDeclNode                = azslParser::SrgDefinitionContext;
+    //using AstSRGMemberNode              = azslParser::SrgMemberDeclarationContext;
     using AstNamedVarDecl               = azslParser::NamedVariableDeclaratorContext;
     using AstUnnamedVarDecl             = azslParser::UnnamedVariableDeclaratorContext;
     using AstFuncSig                    = azslParser::LeadingTypeFunctionSignatureContext;

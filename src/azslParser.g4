@@ -16,15 +16,16 @@ compilationUnit:
 ;
 
 topLevelDeclaration:
-        anyStructuredTypeDefinitionStatement
+		namespaceStatement
+    |   anyStructuredTypeDefinitionStatement
     |   variableDeclarationStatement
     |   attributedFunctionDefinition
     |   attributedFunctionDeclaration
     |   attributeSpecifierSequence
     |   compilerExtensionStatement      // AZSLc specific
-    |   typeAliasingDefinitionStatement // AZSLc specific
-    |   attributedSrgDefinition         // AZSLc specific
-    |   attributedSrgSemantic           // AZSLc specific
+    |   typeAliasingDefinitionStatement // AZSL  specific
+//    |   attributedSrgDefinition       // relic of AZSL 1.x
+    |   attributedSrgSemantic           // AZSL  specific
     |   Semi
 ;
 
@@ -44,6 +45,10 @@ qualifiedId:
 
 nestedNameSpecifier:
     GlobalSROToken='::'? (Identifier '::')*
+;
+
+namespaceStatement:
+	Namespace Name=idExpression? LeftBrace topLevelDeclaration* RightBrace
 ;
 
 classDefinitionStatement:
@@ -173,8 +178,8 @@ attributeArgumentList:
 ;
 
 attribute:
-    Global ColonColon (Namespace=Identifier ColonColon)? Name=Identifier attributeArgumentList?     # GlobalAttribute
-  | (Namespace=Identifier ColonColon)? Name=Identifier attributeArgumentList?                       # AttachedAttribute
+    Global ColonColon (AttributeNamespace=Identifier ColonColon)? Name=Identifier attributeArgumentList?     # GlobalAttribute
+  | (AttributeNamespace=Identifier ColonColon)? Name=Identifier attributeArgumentList?                       # AttachedAttribute
 ;
 
 attributeSpecifier:
@@ -859,6 +864,9 @@ attributedFunctionDefinition:
     attributeSpecifierAny* functionDefinition
 ;
 
+// _________
+// AZSL only
+
 // special debugging intrinsics of the compiler
 compilerExtensionStatement:
         KW_ext_print_message '(' Message=StringLiteral ')' Semi
@@ -867,26 +875,25 @@ compilerExtensionStatement:
                                                                    | KW_ext_prtsym_constint_value) ')' Semi
 ;
 
-// AZSL SRG
+// relics:
+//srgDefinition:
+//    Partial? ShaderResourceGroup Name=Identifier (':' Semantic=Identifier)?
+//    LeftBrace srgMemberDeclaration* RightBrace
+//;
 
-srgDefinition:
-    Partial? ShaderResourceGroup Name=Identifier (':' Semantic=Identifier)?
-    LeftBrace srgMemberDeclaration* RightBrace
-;
+//attributedSrgDefinition:
+//    attributeSpecifierAny* srgDefinition
+//;
 
-attributedSrgDefinition:
-    attributeSpecifierAny* srgDefinition
-;
-
-srgMemberDeclaration:
-        structDefinitionStatement
-    |   attributedFunctionDeclaration
-    |   attributedFunctionDefinition
-    |   variableDeclarationStatement
-    |   enumDefinitionStatement
-    |   typeAliasingDefinitionStatement
-    |   attributeSpecifierAny // Allows [[pad_to(N)]].
-;
+//srgMemberDeclaration:
+//        structDefinitionStatement
+//    |   attributedFunctionDeclaration
+//    |   attributedFunctionDefinition
+//    |   variableDeclarationStatement
+//    |   enumDefinitionStatement
+//    |   typeAliasingDefinitionStatement
+//    |   attributeSpecifierAny // Allows [[pad_to(N)]].
+//;
 
 srgSemantic:
     ShaderResourceGroupSemantic Name=Identifier srgSemanticBodyDeclaration

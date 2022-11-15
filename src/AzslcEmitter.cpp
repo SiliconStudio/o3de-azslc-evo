@@ -96,7 +96,7 @@ namespace AZ::ShaderCompiler
         const uint32_t numOf32bitConst = GetNumberOf32BitConstants(options, m_ir->m_rootConstantStructUID);
         const RootSigDesc rootSig = BuildSignatureDescription(options, numOf32bitConst);
 
-        SetupScopeMigrations(options);
+        //SetupScopeMigrations(options);
 
         // Emit global attributes
         for (const auto& attr : m_ir->m_symbols.GetGlobalAttributeList())
@@ -951,7 +951,7 @@ namespace AZ::ShaderCompiler
         }
 
         const auto& bindInfo = rootSig.Get(srgId);
-        m_out << "ConstantBuffer " << srgInfo.m_declNode->Name->getText() << "_CBContainer : register(b" << bindInfo.m_registerBinding.m_pair[bindSet].m_registerIndex << ")\n{\n";
+        m_out << "ConstantBuffer " << "NONAME" /*srgInfo.m_declNode->Name->getText() TODO-AZSLC2 */ << "_CBContainer : register(b" << bindInfo.m_registerBinding.m_pair[bindSet].m_registerIndex << ")\n{\n";
 
         for (const auto& cId : srgInfo.m_CBs)
         {
@@ -1104,16 +1104,15 @@ namespace AZ::ShaderCompiler
         uint32_t swizzle = keyOffsetBits / AZ::ShaderCompiler::kShaderVariantKeyElementSize;
         keyOffsetBits -= swizzle * AZ::ShaderCompiler::kShaderVariantKeyElementSize;
 
-        // Intentional unnamed scope for error-checking
+        if (auto* varInfo = m_ir->GetSymbolSubAs<VarInfo>(shaderKeyUid.m_name))
         {
-            auto& varInfo = *m_ir->GetSymbolSubAs<VarInfo>(shaderKeyUid.m_name);
-            auto dims = varInfo.m_typeInfoExt.GetDimensions();
+            auto dims = varInfo->m_typeInfoExt.GetDimensions();
             assert(dims.m_dimensions.size() == 1); // This is generated variable, it must have exactly 1 array dimension
             if (arraySlot >= dims.m_dimensions[0])
             {
                 const string errorMessage = ConcatString("The option {", UnmangleTrimedName(getterUid.m_name), "} exceeds the number of bits (",
-                    AZ::ShaderCompiler::kShaderVariantKeyRegisterSize * dims.m_dimensions[0], ") allowed by the ShaderVariantFallback.\n",
-                    "Either increase the limit or remove some options!");
+                                                            AZ::ShaderCompiler::kShaderVariantKeyRegisterSize * dims.m_dimensions[0], ") allowed by the ShaderVariantFallback.\n",
+                                                            "Either increase the limit or remove some options!");
                 throw AzslcEmitterException(EMITTER_OPTION_EXCEEDING_BITS_COUNT, errorMessage);
             }
         }
@@ -1152,7 +1151,7 @@ namespace AZ::ShaderCompiler
         m_out << "/* Generated code from ";
         // We don't emit the SRG attributes (only as a comment), but they can be accessed by the srgId if needed
         EmitAllAttachedAttributes(srgId);
-        m_out << " ShaderResourceGroup " << srgInfo.m_declNode->Name->getText() << "*/\n";
+        m_out << " ShaderResourceGroup " << "NONAME" /* srgInfo.m_declNode->Name->getText() // TODO-AZSLC2 */ << "*/\n";
 
         for (const auto& t : srgInfo.m_srViews)
         {

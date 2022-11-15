@@ -656,7 +656,7 @@ namespace AZ::ShaderCompiler
         for (auto& [srgUid, srgInfo] : m_ir->GetOrderedSymbolsOfSubType_2<SRGInfo>())
         {
             Json::Value srgLayout(Json::objectValue);
-            srgLayout["id"] = srgInfo->m_declNode->Name->getText();
+            //srgLayout["id"] = srgInfo->m_declNode->Name->getText(); // TODO-AZSLC2
 
             // Try to locate the original filename where this SRG is declared
             size_t physical = srgInfo->m_declNode->getStart()->getLine();

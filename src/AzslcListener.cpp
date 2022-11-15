@@ -96,18 +96,18 @@ namespace AZ::ShaderCompiler
         m_ir->m_scope.ExitScope(ctx->RightBrace()->getSourceInterval().b);
     }
 
-    void SemaCheckListener::enterSrgDefinition(azslParser::SrgDefinitionContext* ctx)
-    {
-        m_ir->m_sema.RegisterSRG(ctx);
-        m_ir->m_scope.EnterScope(ctx->Name->getText(), ctx->LeftBrace()->getSourceInterval().a);
-    }
+    //void SemaCheckListener::enterSrgDefinition(azslParser::SrgDefinitionContext* ctx)
+    //{
+    //    m_ir->m_sema.RegisterSRG(ctx);
+    //    m_ir->m_scope.EnterScope(ctx->Name->getText(), ctx->LeftBrace()->getSourceInterval().a);
+    //}
 
-    void SemaCheckListener::exitSrgDefinition(azslParser::SrgDefinitionContext* ctx)
-    {
-        // Validate the content on scope exit
-        m_ir->m_sema.ValidateSrg(ctx);
-        m_ir->m_scope.ExitScope(ctx->RightBrace()->getSourceInterval().b);
-    }
+    //void SemaCheckListener::exitSrgDefinition(azslParser::SrgDefinitionContext* ctx)
+    //{
+    //    // Validate the content on scope exit
+    //    m_ir->m_sema.ValidateSrg(ctx);
+    //    m_ir->m_scope.ExitScope(ctx->RightBrace()->getSourceInterval().b);
+    //}
 
     void SemaCheckListener::enterSrgSemanticMemberDeclaration(azslParser::SrgSemanticMemberDeclarationContext* ctx)
     {
@@ -349,8 +349,8 @@ namespace AZ::ShaderCompiler
     {
         // Attributes can be filtered out by namespace.
         // Attributes without a namespace are always valid and attributes in the 'void' namespace are always filtered out
-        auto Namespace = (ctx->Namespace) ? ctx->Namespace->getText() : "";
-        if (!Namespace.empty() && (Namespace == "void" || !ir->IsAttributeNamespaceActivated(Namespace)))
+        auto attrNamespace = (ctx->AttributeNamespace) ? ctx->AttributeNamespace->getText() : "";
+        if (!attrNamespace.empty() && (attrNamespace == "void" || !ir->IsAttributeNamespaceActivated(attrNamespace)))
         {
             return;
         }
@@ -358,7 +358,7 @@ namespace AZ::ShaderCompiler
         ir->RegisterAttributeSpecifier(scope,
                                        GetAttributeCategory(ctx),
                                        ctx->getStart()->getLine(),
-                                       Namespace,
+                                       attrNamespace,
                                        ctx->Name->getText(),
                                        ctx->attributeArgumentList());
     }
@@ -398,7 +398,7 @@ namespace AZ::ShaderCompiler
     {
         // for (a;b;c) block is special, because it has a special power of symbol definition in the 'a' block.
         //             therefore we enter the anonymous scope right before 'a'
-        m_ir->m_sema.MakeAndEnterAnonymousScope("for", ctx->LeftParen()->getSymbol());
+        m_ir->m_sema.MakeAndEnterAnonymousScope("for", ctx->LeftParen()->getSymbol(), ctx);
     }
 
     void SemaCheckListener::exitForStatement(azslParser::ForStatementContext* ctx)
@@ -411,7 +411,7 @@ namespace AZ::ShaderCompiler
         if (!Is< azslParser::HlslFunctionDefinitionContext >(ctx->parent)  // not function because we already entered
             && !Is< azslParser::ForStatementContext >(ctx->parent))  // not for statement because we already entered
         {
-            m_ir->m_sema.MakeAndEnterAnonymousScope("bk", ctx->start);
+            m_ir->m_sema.MakeAndEnterAnonymousScope("bk", ctx->start, ctx);
         }
     }
 
@@ -426,10 +426,22 @@ namespace AZ::ShaderCompiler
 
     void SemaCheckListener::enterSwitchBlock(azslParser::SwitchBlockContext* ctx)
     {
-        m_ir->m_sema.MakeAndEnterAnonymousScope("sw", ctx->start);
+        m_ir->m_sema.MakeAndEnterAnonymousScope("sw", ctx->start, ctx);
     }
 
     void SemaCheckListener::exitSwitchBlock(azslParser::SwitchBlockContext* ctx)
+    {
+        m_ir->m_scope.ExitScope(ctx->stop->getTokenIndex());
+    }
+
+    void SemaCheckListener::enterNamespaceStatement(azslParser::NamespaceStatementContext* ctx)
+    {
+        UnqualifiedName uqName = ExtractNameFromIdExpression(ctx->Name);
+        string decorator = "namespace_" + uqName;
+        m_ir->m_sema.MakeAndEnterAnonymousScope(decorator, ctx->start, ctx);
+    }
+
+    void SemaCheckListener::exitNamespaceStatement(azslParser::NamespaceStatementContext* ctx)
     {
         m_ir->m_scope.ExitScope(ctx->stop->getTokenIndex());
     }

@@ -29,8 +29,8 @@ namespace AZ::ShaderCompiler
         void enterEnumeratorDeclarator(azslParser::EnumeratorDeclaratorContext* ctx) override;
         void enterSamplerBodyDeclaration(azslParser::SamplerBodyDeclarationContext* ctx) override;
         void exitSamplerBodyDeclaration(azslParser::SamplerBodyDeclarationContext* ctx) override;
-        void enterSrgDefinition(azslParser::SrgDefinitionContext* ctx) override;
-        void exitSrgDefinition(azslParser::SrgDefinitionContext* ctx) override;
+        //void enterSrgDefinition(azslParser::SrgDefinitionContext* ctx) override;
+        //void exitSrgDefinition(azslParser::SrgDefinitionContext* ctx) override;
         void enterSrgSemanticMemberDeclaration(azslParser::SrgSemanticMemberDeclarationContext* ctx) override;
         void exitClassDefinition(azslParser::ClassDefinitionContext* ctx) override;
         void exitSrgSemantic(azslParser::SrgSemanticContext* ctx) override;
@@ -58,6 +58,8 @@ namespace AZ::ShaderCompiler
         void exitBlockStatement(azslParser::BlockStatementContext* ctx) override;
         void enterSwitchBlock(azslParser::SwitchBlockContext* ctx) override;
         void exitSwitchBlock(azslParser::SwitchBlockContext* ctx) override;
+        void enterNamespaceStatement(azslParser::NamespaceStatementContext* ctx) override;
+        void exitNamespaceStatement(azslParser::NamespaceStatementContext* ctx) override;
         void enterFunctionCallExpression(azslParser::FunctionCallExpressionContext* ctx) override;
 
         void visitTerminal(tree::TerminalNode* node) override;

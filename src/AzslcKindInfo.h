@@ -816,14 +816,15 @@ namespace AZ::ShaderCompiler
             return none;
         }
 
-        bool IsPartial() const { return m_declNode ? !!m_declNode->Partial() : false; }
+        //bool IsPartial() const { return m_declNode ? !!m_declNode->Partial() : false; }
+        bool IsPartial() const { return false; }  // TODO-AZSLC2
 
         size_t GetOriginalLineNumber() const
         {
             return m_declNode ? m_declNode->start->getLine() : 0;
         }
 
-        AstSRGDeclNode*           m_declNode = nullptr;
+        ParserRuleContext*        m_declNode = nullptr;
         ClassInfo                 m_implicitStruct;           // Implicit holding struct for SRG Constants
         optional< IdentifierUID > m_shaderVariantFallback;
         optional< IdentifierUID > m_semantic;
@@ -1157,7 +1158,7 @@ namespace AZ::ShaderCompiler
 
         const TokensLocation operator()(const SRGInfo& srgInfo) const
         {
-            return MakeTokensLocation(srgInfo.m_declNode, srgInfo.m_declNode->Name);
+            return MakeTokensLocation(srgInfo.m_declNode->start); //srgInfo.m_declNode->Name
         }
 
         const TokensLocation operator()(const TypeAliasInfo taInfo) const

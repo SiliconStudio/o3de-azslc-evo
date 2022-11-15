@@ -169,7 +169,7 @@ namespace AZ::ShaderCompiler
 
         auto ExtractSamplerState(AstVarInitializer* ctx) -> SamplerStateDesc;
 
-        auto RegisterSRG(AstSRGDeclNode* ctx) -> IdAndKind&;
+        auto RegisterSRG(ParserRuleContext* ctx) -> IdAndKind&;
 
         void RegisterSRGSemanticMember(AstSRGSemanticMemberDeclNode* ctx);
 
@@ -237,7 +237,7 @@ namespace AZ::ShaderCompiler
         // Will diagnose-throw if multiple bases have the candidate symbol's name.
         auto GetSymbolHiddenInBase(IdentifierUID hidingCandidate) -> IdAndKind*;
 
-        void ValidateSrg(azslParser::SrgDefinitionContext* ctx) noexcept(false);
+        void ValidateSrg(ParserRuleContext* ctx) noexcept(false);
 
         void ValidateSrgSemantic(azslParser::SrgSemanticContext* ctx) noexcept(false);
 
@@ -361,7 +361,7 @@ namespace AZ::ShaderCompiler
         auto ResolveOverload(IdAndKind* maybeOverloadSet, azslParser::ArgumentListContext* argumentListCtx) const -> IdAndKind*;
 
         //! Generate a unique name, create a corresponding namespace symbol, and enter its scope
-        void MakeAndEnterAnonymousScope(string_view decorationPrefix, Token* scopeFirstToken);
+        void MakeAndEnterAnonymousScope(string_view decorationPrefix, Token* scopeFirstToken, ParserRuleContext* ctx);
 
     private:
         //! for internal use when encountering unresolved symbols by lookup.

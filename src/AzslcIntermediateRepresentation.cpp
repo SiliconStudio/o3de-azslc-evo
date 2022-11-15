@@ -147,25 +147,21 @@ namespace AZ::ShaderCompiler
         }
 
         auto variantFallbackGroups = 0;
-        for (auto srgInfo : GetOrderedSubInfosOfSubType<SRGInfo>())
+        for (auto classInfo : GetOrderedSubInfosOfSubType<ClassInfo>())
         {
-            if (!srgInfo->m_semantic)
+            if (classInfo->m_kind == Kind::ShaderResourceGroupSemantic)
             {
-                auto errorMsg = FormatString("Missing ShaderResourceGroupSemantic for ShaderResourceGroup [%s]", srgInfo->m_declNode->getText().c_str());
-                throw AzslcIrException(IR_SRG_WITHOUT_SEMANTIC, errorMsg);
-            }
-
-            auto* semanticAsClassInfo = GetSymbolSubAs<ClassInfo>(srgInfo->m_semantic->GetName());
-            optional<int64_t>& variantFallback = semanticAsClassInfo->Get<SRGSemanticInfo>()->m_variantFallback;
-            if (variantFallback)
-            {
-                variantFallbackGroups++;
-
-                if (!hasOptions)
+                optional<int64_t>& variantFallback = classInfo->Get<SRGSemanticInfo>()->m_variantFallback;
+                if (variantFallback)
                 {
-                    PrintWarning(Warn::W1, semanticAsClassInfo->GetDeclNode()->start,
-                                 "If you have no options, SRG do not need a ShaderVariantFallback");
-                    variantFallback = none;
+                    variantFallbackGroups++;
+
+                    if (!hasOptions)
+                    {
+                        PrintWarning(Warn::W1, classInfo->GetDeclNode()->start,
+                                     "If you have no options, SRG do not need a ShaderVariantFallback");
+                        variantFallback = none;
+                    }
                 }
             }
         }
