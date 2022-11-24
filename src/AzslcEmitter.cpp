@@ -119,6 +119,18 @@ namespace AZ::ShaderCompiler
 
             switch (iteratedSymbolKind)
             {
+            case Kind::Namespace:
+            {
+                // careful to skip unnamed scopes but keep namespaces
+                if (iteratedSymbolName.find("$namespace") != string::npos)
+                {
+                    m_out << "namespace "
+                          << RemoveUnnamedScopeUniquifier(
+                                 GetTranslatedName(iteratedSymbolUid, UsageContext::DeclarationSite))
+                          << " {\n";
+                }
+                break;
+            }
                 // top-level enums, structs and classes, as well as immediate-type-declaration enum/structs (`struct S{} s;`)
             case Kind::Interface:
             case Kind::Struct:
@@ -128,12 +140,13 @@ namespace AZ::ShaderCompiler
                 if (IsTopLevelThroughTranslation(iteratedSymbolUid))
                 {
                     EmitPreprocessorLineDirective(iteratedSymbolName);
-
-                    auto* classInfo = m_ir->GetSymbolSubAs<ClassInfo>(iteratedSymbolName);
-                    iteratedSymbolKind == Kind::Enum ?
-                          EmitEnum(iteratedSymbolUid, *classInfo, options)
-                        : EmitStruct(*classInfo, iteratedSymbolName, options);
                 }
+
+                auto* classInfo = m_ir->GetSymbolSubAs<ClassInfo>(iteratedSymbolName);
+                iteratedSymbolKind == Kind::Enum ?
+                        EmitEnum(iteratedSymbolUid, *classInfo, options)
+                    : EmitStruct(*classInfo, iteratedSymbolName, options);
+
                 break;
             }
                 // typedefs
@@ -142,42 +155,43 @@ namespace AZ::ShaderCompiler
                 if (IsTopLevelThroughTranslation(iteratedSymbolUid))
                 {
                     EmitPreprocessorLineDirective(iteratedSymbolName);
-
-                    auto* aliasInfo = m_ir->GetSymbolSubAs<TypeAliasInfo>(iteratedSymbolName);
-                    EmitTypeAlias(iteratedSymbolUid, *aliasInfo, options);
                 }
+                auto* aliasInfo = m_ir->GetSymbolSubAs<TypeAliasInfo>(iteratedSymbolName);
+                EmitTypeAlias(iteratedSymbolUid, *aliasInfo, options);
+
                 break;
             }
-                // global variables
             case Kind::Variable:
             {
                 if (IsTopLevelThroughTranslation(iteratedSymbolUid))
                 {
-                    auto* varInfo = m_ir->GetSymbolSubAs<VarInfo>(iteratedSymbolName);
-                    if (varInfo->CheckHasStorageFlag(StorageFlag::Enumerator))
-                    {   // Enumerators have already been emitted in the Kind::Enum case.
-                        // They act as static const, but no need to emit them here
-                        break;
-                    }
-
-                    // Option variables are emitted after the ShaderVariantFallback SRG
-                    if (varInfo->CheckHasStorageFlag(StorageFlag::Option))
-                    {
-                        EmitShaderVariantOptionVariableDeclaration(iteratedSymbolUid, options);
-                        break;
-                    }
-
-                    // a non-global extern is an SRG-variable. it should be emitted by EmitSRG
-                    bool global = IsGlobal(iteratedSymbolName);
-                    if (!global && !varInfo->StorageFlagIsLocalLinkage(global || varInfo->m_srgMember))
-                    {
-                        break;
-                    }
-
                     EmitPreprocessorLineDirective(iteratedSymbolName);
-                    EmitVariableDeclaration(*varInfo, iteratedSymbolUid, options, VarDeclHasFlag(VarDeclHas::Initializer));
-                    m_out << ";\n";
                 }
+                auto* varInfo = m_ir->GetSymbolSubAs<VarInfo>(iteratedSymbolName);
+                if (varInfo->CheckHasStorageFlag(StorageFlag::Enumerator))
+                {   // Enumerators have already been emitted in the Kind::Enum case.
+                    // They act as static const, but no need to emit them here
+                    break;
+                }
+
+                // Option variables are emitted after the ShaderVariantFallback SRG
+                if (varInfo->CheckHasStorageFlag(StorageFlag::Option))
+                {
+                    EmitShaderVariantOptionVariableDeclaration(iteratedSymbolUid, options);
+                    break;
+                }
+
+                // a non-global extern is an SRG-variable. it should be emitted by EmitSRG
+                bool global = IsGlobal(iteratedSymbolName);
+                if (!global && !varInfo->StorageFlagIsLocalLinkage(global || varInfo->m_srgMember))
+                {
+                    break;
+                }
+
+                EmitPreprocessorLineDirective(iteratedSymbolName);
+                EmitVariableDeclaration(*varInfo, iteratedSymbolUid, options, VarDeclHasFlag(VarDeclHas::Initializer));
+                m_out << ";\n";
+
                 break;
             }
                 // SRG
@@ -970,7 +984,7 @@ namespace AZ::ShaderCompiler
         for (const auto& cId : srgInfo.m_CBs)
         {
             const auto* memberInfo = m_ir->GetSymbolSubAs<VarInfo>(cId.m_name);
-            const auto& cbName = ReplaceSeparators(cId.m_name, Underscore);
+            const auto& cbName = GetTranslatedName(cId.m_name, UsageContext::DeclarationSite);
             const auto& uqName = cId.GetNameLeaf();
 
             if (memberInfo->IsConstantBuffer())
@@ -993,7 +1007,8 @@ namespace AZ::ShaderCompiler
 
         const auto& bindInfo = rootSig.Get(cId);
         const auto* varInfo = m_ir->GetSymbolSubAs<VarInfo>(cId.m_name);
-        auto cbName = ReplaceSeparators(cId.m_name, Underscore);
+        //auto cbName = ReplaceSeparators(cId.m_name, Underscore);
+        auto cbName = GetTranslatedName(cId.m_name, UsageContext::DeclarationSite);
 
         assert(varInfo->IsConstantBuffer());
         // note: instead of redoing this work ad-hoc, EmitText could be used directly on the ext type.
@@ -1063,7 +1078,7 @@ namespace AZ::ShaderCompiler
         auto   bindSet = BindingPair::Set::Merged;
         auto&  bindInfo = rootSig.Get(tId);
         auto*  varInfo = m_ir->GetSymbolSubAs<VarInfo>(tId.m_name);
-        string varType = GetTranslatedName(varInfo->m_typeInfoExt, UsageContext::DeclarationSite, options);
+        string varType = GetTranslatedName(varInfo->m_typeInfoExt, UsageContext::ReferenceSite, options);
         auto   registerTypeLetter = ToLower(BindingType::ToStr(RootParamTypeToBindingType(bindInfo.m_type)));
         optional<string> stringifiedLogicalSpace = std::to_string(bindInfo.m_registerBinding.m_pair[bindSet].m_logicalSpace);
 
@@ -1072,13 +1087,14 @@ namespace AZ::ShaderCompiler
         m_out << prefix;
         // declaration of the view variable on the global scope.
         // type unmangled_path_to_symbol [optional_array_dimension] : optional_register_binding_as_suffix
-        m_out << varType << " " << ReplaceSeparators(tId.m_name, Underscore);
+        //m_out << varType << " " << ReplaceSeparators(tId.m_name, Underscore);
+        m_out << varType << " " << GetTranslatedName(tId.m_name, UsageContext::DeclarationSite);
 
         if (bindInfo.m_isUnboundedArray)
         {
             m_out << "[]";
         }
-        else  if (bindInfo.m_registerRange > 1)
+        else if (bindInfo.m_registerRange > 1)
         {
             m_out << "[" << bindInfo.m_registerRange << "]";
         }

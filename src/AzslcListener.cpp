@@ -437,8 +437,8 @@ namespace AZ::ShaderCompiler
     void SemaCheckListener::enterNamespaceStatement(azslParser::NamespaceStatementContext* ctx)
     {
         UnqualifiedName uqName = ExtractNameFromIdExpression(ctx->Name);
-        string decorator = "namespace_" + uqName;
-        m_ir->m_sema.MakeAndEnterAnonymousScope(decorator, ctx->start, ctx);
+        string prefix = DecorateAnonymous(uqName, "namespace");
+        m_ir->m_sema.MakeAndEnterAnonymousScope(prefix, ctx->start, ctx);
     }
 
     void SemaCheckListener::exitNamespaceStatement(azslParser::NamespaceStatementContext* ctx)

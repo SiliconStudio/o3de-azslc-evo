@@ -122,7 +122,7 @@ namespace AZ::ShaderCompiler
         // instead we'll shift around the elements to respect that order.
         // And to do so, we'll use a dependency DAG and a topological solver.
 
-        m_symbols.ReorderBySymbolDependency();
+        //m_symbols.ReorderBySymbolDependency();
 
         RegisterRootConstantStruct(middleEndconfigration);
 

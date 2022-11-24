@@ -262,6 +262,12 @@ namespace AZ
         return ss.str();
     }
 
+    template< typename Iterator >
+    bool Contains(Iterator begin, Iterator end, typename Iterator::value_type const& p)
+    {
+        return std::find(begin, end, p) != end;
+    }
+
     template< typename Iterator, typename Predicate >
     bool Contains(Iterator begin, Iterator end, Predicate p)
     {

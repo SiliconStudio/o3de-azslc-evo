@@ -699,8 +699,8 @@ namespace AZ::ShaderCompiler
         }
 
         auto& [srgUid, srgKind] = GetCurrentScopeIdAndKind();
-        string srgInfoName = string{GetParentName(srgUid.m_name)} + "srginfo_" + srgUid.GetNameLeaf();
-        srgInfoName = Replace(srgInfoName, "$namespace_", "");
+        string srgInfoName = srgUid.m_name + "_srginfoSymbol_";
+        srgInfoName = RemoveUnnamedScopeUniquifier(srgInfoName);
         auto srgInfoUID = IdentifierUID{QualifiedName{srgInfoName}};
         auto& srgInfo = *m_symbols->GetAsSub<SRGInfo>(srgInfoUID);
 
@@ -1994,15 +1994,14 @@ namespace AZ::ShaderCompiler
 
     void SemanticOrchestrator::MakeAndEnterAnonymousScope(string_view decorationPrefix, Token* scopeFirstToken, ParserRuleContext* ctx)
     {
-        UnqualifiedName unnamedBlockCode{ConcatString("$", decorationPrefix, m_anonymousCounter)};
+        UnqualifiedName unnamedBlockCode{Replace(string{decorationPrefix}, "#", ToString(m_anonymousCounter))};
         auto& [id, kind] = AddIdentifier(unnamedBlockCode, Kind::Namespace, scopeFirstToken->getLine());
         if (optional<AttributeInfo> attr = m_symbols->GetAttribute(id, "SRG"))
         {
             string semantic = std::get<string>(attr->m_argList.front());
             
             // register a fake SRG
-
-            string idText      = Replace(string{decorationPrefix}, "namespace_", "srginfo_") + ToString(m_anonymousCounter);
+            string idText      = UnMangle(unnamedBlockCode) + "_srginfoSymbol_";
             size_t line        = scopeFirstToken->getLine();
             verboseCout << line << ": fake srg decl: " << idText << "\n";
             auto uqNameView    = UnqualifiedNameView{ idText };

@@ -207,7 +207,7 @@ namespace AZ::ShaderCompiler
     //! returns: "MyStruct_m_myVar"
     inline string Flatten(string name, FlattenStrategy strategy)
     {
-        name = std::regex_replace(name, std::regex("\\?"), "");
+        name = Replace(name, "?", "");
         return ReplaceSeparators(strategy == PreserveArgumentsUnicity ? FlattenParenthesisGroups(name) : RemoveMatchedParenthesis(name), Underscore);
     }
 
@@ -217,12 +217,19 @@ namespace AZ::ShaderCompiler
         return StartsWith(name, "?") ? Slice(name, 1, -1) : name;
     }
 
-    //! Change from AZIR form to AZSLang form
-    //! eg "/SRG/mem" to "::SRG::mem"
+    inline string RemoveUnnamedScopeUniquifier(string name)
+    {
+        return std::regex_replace(name, std::regex("\\$\\w*\\d*\\$"), "");  // eg: $word3$
+    }
+
+    //! Change from AZIR form to HLSL form
+    //! eg "/SRG/func(?int)/$bk1$/mem" to "::SRG::mem::func::mem"
     inline string UnMangle(string name)
     {
-        name = std::regex_replace(name, std::regex("/"), "::");
-        name = std::regex_replace(name, std::regex("\\?"), "");
+        name = RemoveUnnamedScopeUniquifier(name);
+        name = Replace(name, "//", "/");
+        name = Replace(name, "/", "::");
+        name = Replace(name, "?", "");
         name = RemoveMatchedParenthesis(name);
         return name;
     }
@@ -450,6 +457,12 @@ namespace AZ::ShaderCompiler
         return Decorate("(", Join(begin, end, ","), ")");
     }
 
+    inline string DecorateAnonymous(UnqualifiedName name, string decoration)
+    {
+        assert(IsLeaf(name));
+        return ConcatString("$", decoration, "#$", name);
+    }
+
     //! The key to any symbol
     struct IdentifierUID
     {
@@ -596,6 +609,7 @@ namespace AZ::Tests
         assert(UnMangle("/func(?int, f2())") == "::func");
         assert(UnMangle("/class/member") == "::class::member");
         assert(UnMangle("?matrix4x4") == "matrix4x4");
+        assert(UnMangle("/$namespace44$MaterialSRG") == "::MaterialSRG");
 
         assert(IsLeafDecoratedByArguments("/func()"));
         assert(IsLeafDecoratedByArguments("/func(?int)"));
