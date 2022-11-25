@@ -167,6 +167,7 @@ namespace AZ::ShaderCompiler
                 {
                     EmitPreprocessorLineDirective(iteratedSymbolName);
                 }
+
                 auto* varInfo = m_ir->GetSymbolSubAs<VarInfo>(iteratedSymbolName);
                 if (varInfo->CheckHasStorageFlag(StorageFlag::Enumerator))
                 {   // Enumerators have already been emitted in the Kind::Enum case.
@@ -184,6 +185,18 @@ namespace AZ::ShaderCompiler
                 // a non-global extern is an SRG-variable. it should be emitted by EmitSRG
                 bool global = IsGlobal(iteratedSymbolName);
                 if (!global && !varInfo->StorageFlagIsLocalLinkage(global || varInfo->m_srgMember))
+                {
+                    break;
+                }
+
+                // if the variable is a field, or local to a function, it will be emitted by its holder's emitter.
+                QualifiedNameView parent = GetParentName(iteratedSymbolName);
+                IdAndKind* parentIdKnd = m_ir->GetIdAndKindInfo(parent);
+                if (parentIdKnd && parentIdKnd->second.IsKindOneOf(Kind::Class,
+                                                                   Kind::Struct,
+                                                                   Kind::Interface,
+                                                                   Kind::ShaderResourceGroupSemantic,
+                                                                   Kind::Function))
                 {
                     break;
                 }
