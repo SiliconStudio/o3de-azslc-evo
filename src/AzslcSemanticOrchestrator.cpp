@@ -698,8 +698,8 @@ namespace AZ::ShaderCompiler
                 GetNonEasyToFoldMessage(arrayDims)};
         }
 
-        auto& [srgUid, srgKind] = GetCurrentScopeIdAndKind();
-        string srgInfoName = srgUid.m_name + "_srginfoSymbol_";
+        auto& [curScope, _] = GetCurrentScopeIdAndKind();
+        string srgInfoName = JoinPath(curScope.m_name, "_srgInfoSymbol_");
         srgInfoName = RemoveUnnamedScopeUniquifier(srgInfoName);
         auto srgInfoUID = IdentifierUID{QualifiedName{srgInfoName}};
         auto& srgInfo = *m_symbols->GetAsSub<SRGInfo>(srgInfoUID);
@@ -708,7 +708,7 @@ namespace AZ::ShaderCompiler
         assert(typeClass != TypeClass::Alias);
 
         string errorMessage;
-        if (!m_unboundedArraysValidator.CheckFieldCanBeAddedToSrg(isUnboundedArray, srgUid, varUid, varInfo, typeClass, &errorMessage))
+        if (!m_unboundedArraysValidator.CheckFieldCanBeAddedToSrg(isUnboundedArray, srgInfoUID, varUid, varInfo, typeClass, &errorMessage))
         {
             throw AzslcOrchestratorException{ORCHESTRATOR_UNBOUNDED_RESOURCE_ISSUE, ctx->start, errorMessage};
         }
@@ -2014,13 +2014,16 @@ namespace AZ::ShaderCompiler
             return;  // Nothing special to do in that case.
         }
         auto& [id, kind] = AddIdentifier(finalName, Kind::Namespace, scopeFirstToken->getLine());
+        m_scope->EnterScope(finalName, scopeFirstToken->getTokenIndex());
+        ++m_anonymousCounter;
+
         // Check for special case: the namespace is an SRG (marked by attribute)
         if (optional<AttributeInfo> attr = m_symbols->GetAttribute(id, "SRG"))
         {
             string semantic = std::get<string>(attr->m_argList.front());
 
             // Register a fake SRGInfo
-            string idText      = UnMangle(finalName) + "_srginfoSymbol_";
+            string idText      = "_srgInfoSymbol_";
             size_t line        = scopeFirstToken->getLine();
             verboseCout << line << ": fake srg decl: " << idText << "\n";
             auto uqNameView    = UnqualifiedNameView{ idText };
@@ -2035,7 +2038,5 @@ namespace AZ::ShaderCompiler
                 srgInfo.m_implicitStruct.m_kind = Kind::Struct;
             }
         }
-        m_scope->EnterScope(finalName, scopeFirstToken->getTokenIndex());
-        ++m_anonymousCounter;
     }
 }

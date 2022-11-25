@@ -80,4 +80,18 @@ namespace AZ::ShaderCompiler
         m_order.push_back(fetchedIdIt->first);
         return *fetchedIdIt;
     }
+
+    vector<IdentifierUID>::iterator SymbolTable::FindLastOfLevel(vector<IdentifierUID>::iterator symbol)
+    {
+        auto it = symbol;
+        int level = CountLevels(symbol->GetName());
+        while (it + 1 != m_order.end())
+        {
+            int l = CountLevels((it + 1)->GetName());
+            if (l <= level)
+                return it;
+            ++it;
+        }
+        return m_order.end() - 1;
+    }
 }  // end of namespace AZ::ShaderCompiler

@@ -35,6 +35,8 @@ namespace AZ::ShaderCompiler
         //! Return true if found and deleted
         bool DeleteIdentifier(const IdentifierUID& name);
 
+        vector<IdentifierUID>::iterator FindLastOfLevel(vector<IdentifierUID>::iterator symbol);
+
         // [GFX TODO]2: use densemap/oahm to avoid fragmentation (depends on [Task 5])
         IdToKindMap           m_symbols;   // declarations of any kind and attached information (unordered bag, but O(1+) lookup)
         vector<IdentifierUID> m_order;     // remember order of apparition in the original source (useful for iteration during dump or emission)

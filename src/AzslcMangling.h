@@ -343,6 +343,22 @@ namespace AZ::ShaderCompiler
         return Slice(path, 0, lastSlash + 1);
     }
 
+    //! 0 for /
+    //! 0 for /a
+    //! 1 for /N/
+    //! 1 for /N/a
+    //! 2 for /N/M/a
+    inline int CountLevels(string_view path)
+    {
+        int l = 0;
+        while (path != "/")
+        {
+            path = LevelUp(path);
+            ++l;
+        }
+        return l;
+    }
+
     //! Has the same semantics than LevelUp but cleans up the trailing slash when there is a name left other than root.
     //! example: "/dir" from "/dir/leaf"
     inline string_view GetParentName(string_view path)
@@ -633,6 +649,12 @@ namespace AZ::Tests
         assert(CountParameters("/f(?int, ?float)") == 2);
         assert(CountParameters("/f(/A/B/C, /D/E/F, ?half)") == 3);
         assert(CountParameters("?vector<half,3>") == 0);
+
+        assert(CountLevels("/") == 0);
+        assert(CountLevels("/a") == 1);
+        assert(CountLevels("/N/") == 1);
+        assert(CountLevels("/N/a") == 2);
+        assert(CountLevels("/N/M/a") == 3);
 
         QualifiedName qn;
         // moderately shameful that this compiles:

@@ -67,6 +67,11 @@ namespace AZ::ShaderCompiler
 
     protected:
 
+        void EmitSymbols(vector<IdentifierUID>::iterator const& begin,
+                         vector<IdentifierUID>::iterator const& end,
+                         const Options& options,
+                         RootSigDesc const& rootSig);
+
         //! Emits the closest preprocessor generated "#line <int> <filepath>" directive located before
         //! @originalLineNumber. Keeps track of the best finds so the #line directives are not emitted more than once.
         void EmitPreprocessorLineDirective(size_t originalLineNumber);

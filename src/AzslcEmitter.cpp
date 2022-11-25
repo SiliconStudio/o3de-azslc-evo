@@ -112,8 +112,26 @@ namespace AZ::ShaderCompiler
         EmitGetterFunctionDeclarationsForRootConstants(m_ir->m_rootConstantStructUID);
 
         // loop on the (mostly) user-defined order of code entities, and emit
-        for (const IdentifierUID& iteratedSymbolUid : m_ir->m_symbols.GetOrderedSymbols())
+        EmitSymbols(m_ir->m_symbols.GetOrderedSymbols().begin(), m_ir->m_symbols.GetOrderedSymbols().end(), options, rootSig);
+
+        EmitRootConstants(rootSig, options);
+
+        EmitShaderVariantOptionGetters(options);
+
+        if (options.m_emitRootSig)
         {
+            m_out << GetPlatformEmitter().GetRootSig(*this, rootSig, options, BindingPair::Set::Merged);
+        }
+    }
+
+    void CodeEmitter::EmitSymbols(vector<IdentifierUID>::iterator const& begin,
+                                  vector<IdentifierUID>::iterator const& end,
+                                  const Options& options,
+                                  RootSigDesc const& rootSig)
+    {
+        for (auto iterated = begin; iterated != end; ++iterated)
+        {
+            const IdentifierUID& iteratedSymbolUid = *iterated;
             const QualifiedNameView iteratedSymbolName = iteratedSymbolUid.GetName();
             const Kind iteratedSymbolKind = m_ir->GetKind(iteratedSymbolUid);
 
@@ -126,12 +144,18 @@ namespace AZ::ShaderCompiler
                 {
                     m_out << "namespace "
                           << RemoveUnnamedScopeUniquifier(
-                                 GetTranslatedName(iteratedSymbolUid, UsageContext::DeclarationSite))
+                             GetTranslatedName(iteratedSymbolUid, UsageContext::DeclarationSite))
                           << " {\n";
+
+                    auto last = m_ir->m_symbols.m_elastic.FindLastOfLevel(iterated);
+                    // re-enter:
+                    EmitSymbols(iterated + 1, last + 1, options, rootSig);
+                    m_out << "}\n";  // end of namespace scope
+                    iterated = last;  // skip this namespace
                 }
                 break;
             }
-                // top-level enums, structs and classes, as well as immediate-type-declaration enum/structs (`struct S{} s;`)
+            // top-level enums, structs and classes, as well as immediate-type-declaration enum/structs (`struct S{} s;`)
             case Kind::Interface:
             case Kind::Struct:
             case Kind::Class:
@@ -144,12 +168,12 @@ namespace AZ::ShaderCompiler
 
                 auto* classInfo = m_ir->GetSymbolSubAs<ClassInfo>(iteratedSymbolName);
                 iteratedSymbolKind == Kind::Enum ?
-                        EmitEnum(iteratedSymbolUid, *classInfo, options)
+                    EmitEnum(iteratedSymbolUid, *classInfo, options)
                     : EmitStruct(*classInfo, iteratedSymbolName, options);
 
                 break;
             }
-                // typedefs
+            // typedefs
             case Kind::TypeAlias:
             {
                 if (IsTopLevelThroughTranslation(iteratedSymbolUid))
@@ -216,7 +240,7 @@ namespace AZ::ShaderCompiler
 
                 break;
             }
-                // SRG
+            // SRG
             case Kind::ShaderResourceGroup:
             {
                 EmitPreprocessorLineDirective(iteratedSymbolName);
@@ -225,7 +249,7 @@ namespace AZ::ShaderCompiler
                 EmitSRG(*srgSub, iteratedSymbolUid, options, rootSig);
                 break;
             }
-                // function
+            // function
             case Kind::Function:
             {
                 EmitPreprocessorLineDirective(iteratedSymbolName);
@@ -241,15 +265,6 @@ namespace AZ::ShaderCompiler
             default: break;
             } // end switch on code entities kind
         } // end for all entities
-
-        EmitRootConstants(rootSig, options);
-
-        EmitShaderVariantOptionGetters(options);
-
-        if (options.m_emitRootSig)
-        {
-            m_out << GetPlatformEmitter().GetRootSig(*this, rootSig, options, BindingPair::Set::Merged);
-        }
     }
 
     //! azslSymbolName is going to be considered as a startup point of migration (e.g a scope)
