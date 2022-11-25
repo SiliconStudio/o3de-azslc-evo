@@ -457,13 +457,7 @@ namespace AZ::ShaderCompiler
         return Decorate("(", Join(begin, end, ","), ")");
     }
 
-    // named anonymous, yet it's weird.
-    inline string DecorateAnonymous(UnqualifiedName name, string decoration)
-    {
-        assert(IsLeaf(name));
-        return ConcatString("$", decoration, "#$", name);
-    }
-
+    //! # is a marker to later replace with a uniquifying counter.
     inline string DecorateAnonymous(string decoration)
     {
         return ConcatString("$", decoration, "#$");

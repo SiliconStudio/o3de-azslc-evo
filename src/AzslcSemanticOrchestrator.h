@@ -363,6 +363,9 @@ namespace AZ::ShaderCompiler
         //! Generate a unique name, create a corresponding namespace symbol, and enter its scope
         void MakeAndEnterAnonymousScope(string_view decorationPrefix, Token* scopeFirstToken, ParserRuleContext* ctx);
 
+        //! create a named namespace symbol
+        void MakeAndEnterNamespaceScope(UnqualifiedNameView name, Token* scopeFirstToken, ParserRuleContext* ctx);
+
     private:
         //! for internal use when encountering unresolved symbols by lookup.
         void DiagnoseUndeclaredSub(Token* atToken, QualifiedNameView startupScope, string partialName) const;

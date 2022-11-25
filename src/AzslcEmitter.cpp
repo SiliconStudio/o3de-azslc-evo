@@ -108,7 +108,7 @@ namespace AZ::ShaderCompiler
         {
             m_out << StubSubpassInputTypes << "\n";
         }
-        
+
         EmitGetterFunctionDeclarationsForRootConstants(m_ir->m_rootConstantStructUID);
 
         // loop on the (mostly) user-defined order of code entities, and emit
@@ -121,8 +121,8 @@ namespace AZ::ShaderCompiler
             {
             case Kind::Namespace:
             {
-                // careful to skip unnamed scopes but keep namespaces
-                if (iteratedSymbolName.find("$namespace") != string::npos)
+                // careful to skip blocks but keep namespaces
+                if (!ContainsAnySub(iteratedSymbolName, "$bk", "$for", "$sw"))
                 {
                     m_out << "namespace "
                           << RemoveUnnamedScopeUniquifier(
@@ -190,20 +190,29 @@ namespace AZ::ShaderCompiler
                 }
 
                 // if the variable is a field, or local to a function, it will be emitted by its holder's emitter.
-                QualifiedNameView parent = GetParentName(iteratedSymbolName);
-                IdAndKind* parentIdKnd = m_ir->GetIdAndKindInfo(parent);
-                if (parentIdKnd && parentIdKnd->second.IsKindOneOf(Kind::Class,
-                                                                   Kind::Struct,
-                                                                   Kind::Interface,
-                                                                   Kind::ShaderResourceGroupSemantic,
-                                                                   Kind::Function))
+                QualifiedName curName = iteratedSymbolName;
+                bool doEmit = true;
+                while (!IsGlobal(curName))  // can have multiple block deep inside of any such construct
                 {
-                    break;
+                    curName = GetParentName(curName);
+                    IdAndKind* parentIdKnd = m_ir->GetIdAndKindInfo(curName);
+                    if (parentIdKnd && parentIdKnd->second.IsKindOneOf(Kind::Class,
+                                                                       Kind::Struct,
+                                                                       Kind::Interface,
+                                                                       Kind::ShaderResourceGroupSemantic,
+                                                                       Kind::Function))
+                    {
+                        doEmit = false;
+                        break;
+                    }
                 }
 
-                EmitPreprocessorLineDirective(iteratedSymbolName);
-                EmitVariableDeclaration(*varInfo, iteratedSymbolUid, options, VarDeclHasFlag(VarDeclHas::Initializer));
-                m_out << ";\n";
+                if (doEmit)
+                {
+                    EmitPreprocessorLineDirective(iteratedSymbolName);
+                    EmitVariableDeclaration(*varInfo, iteratedSymbolUid, options, VarDeclHasFlag(VarDeclHas::Initializer));
+                    m_out << ";\n";
+                }
 
                 break;
             }
@@ -286,7 +295,7 @@ namespace AZ::ShaderCompiler
                                             });
 
         auto globalScope = QualifiedNameView{ "/" };
-        
+
         // Global root constant custom behavior
         for (auto&[uid, info] : m_ir->GetOrderedSymbolsOfSubType_2<VarInfo>())
         {
@@ -1238,7 +1247,7 @@ namespace AZ::ShaderCompiler
         while (ii <= interval.b)
         {
             auto* token = GetNextToken(ii /*inout*/);
-            
+
             const auto tokenIndex = token->getTokenIndex();
 
             const CodeMutation* codeMutation = codeMutator ? codeMutator->GetMutation(tokenIndex) : nullptr;
@@ -1291,7 +1300,7 @@ namespace AZ::ShaderCompiler
                 if (emitAsIs)
                 {
                     IfIsSrgMemberValidateIsDefined(token, astNode);
-                    
+
                     // do minimal reformatting to have a pseudo-readable emitted code
                     auto str = token->getText();
                     bool lineFeed = str == ";" || str == "{";

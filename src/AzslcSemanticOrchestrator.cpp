@@ -1995,28 +1995,47 @@ namespace AZ::ShaderCompiler
     void SemanticOrchestrator::MakeAndEnterAnonymousScope(string_view decorationPrefix, Token* scopeFirstToken, ParserRuleContext* ctx)
     {
         UnqualifiedName unnamedBlockCode{Replace(string{decorationPrefix}, "#", ToString(m_anonymousCounter))};
-        auto& [id, kind] = AddIdentifier(unnamedBlockCode, Kind::Namespace, scopeFirstToken->getLine());
+        AddIdentifier(unnamedBlockCode, Kind::Namespace, scopeFirstToken->getLine());
+        m_scope->EnterScope(unnamedBlockCode, scopeFirstToken->getTokenIndex());
+        ++m_anonymousCounter;
+    }
+
+    void SemanticOrchestrator::MakeAndEnterNamespaceScope(UnqualifiedNameView name, Token* scopeFirstToken, ParserRuleContext* ctx)
+    {
+        assert(!IsIn('#', name));
+        UnqualifiedName finalName{name};
+        if (name.empty())  // Anonymous namespace
+        {
+            finalName = UnqualifiedName{ConcatString("$namespace", m_anonymousCounter, "$", name)};
+        }
+        if (LookupSymbol(finalName))
+        {
+            // Namespaces can be reopened and extended, they are not redeclared.
+            return;  // Nothing special to do in that case.
+        }
+        auto& [id, kind] = AddIdentifier(finalName, Kind::Namespace, scopeFirstToken->getLine());
+        // Check for special case: the namespace is an SRG (marked by attribute)
         if (optional<AttributeInfo> attr = m_symbols->GetAttribute(id, "SRG"))
         {
             string semantic = std::get<string>(attr->m_argList.front());
-            
-            // register a fake SRG
-            string idText      = UnMangle(unnamedBlockCode) + "_srginfoSymbol_";
+
+            // Register a fake SRGInfo
+            string idText      = UnMangle(finalName) + "_srginfoSymbol_";
             size_t line        = scopeFirstToken->getLine();
             verboseCout << line << ": fake srg decl: " << idText << "\n";
             auto uqNameView    = UnqualifiedNameView{ idText };
             IdAndKind* srgSym  = LookupSymbol(uqNameView);
-            if (!srgSym) // already exists (case of partial)
+            if (!srgSym) // Already exists (case of partial. which is natural now with namespaces)
             {
                 auto& symbol = AddIdentifier(uqNameView, Kind::ShaderResourceGroup, line);
-                // now fillup what we can about the kindinfo:
+                // Now fillup what we can about the kindinfo:
                 auto& [uid, info] = symbol;
                 SRGInfo& srgInfo = info.GetSubAfterInitAs<Kind::ShaderResourceGroup>();
                 srgInfo.m_declNode = ctx;
                 srgInfo.m_implicitStruct.m_kind = Kind::Struct;
             }
         }
-        m_scope->EnterScope(unnamedBlockCode, scopeFirstToken->getTokenIndex());
+        m_scope->EnterScope(finalName, scopeFirstToken->getTokenIndex());
         ++m_anonymousCounter;
     }
 }

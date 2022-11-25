@@ -274,6 +274,12 @@ namespace AZ
         return std::find_if(begin, end, p) != end;
     }
 
+    template< typename... T >
+    bool ContainsAnySub(string_view haystack, T&&... list)
+    {
+        return ((haystack.find(list) != string_view::npos) || ...);
+    }
+
     /// argument in rangeV3-style version:
     template< typename Container >
     string Join(const Container& c, string_view separator = "")
@@ -731,6 +737,9 @@ namespace AZ::Tests
 
         assert(IsIn("hibou", std::initializer_list<const char*>{ "chouette", "hibou", "jay" }));
         assert(!IsIn("hibou", std::initializer_list<const char*>{ "chouette", "jay" }));
+
+        assert(ContainsAnySub("lazydogjumps", "hot", "dog", "cold"));
+        assert(!ContainsAnySub("lazydogjumps", "hot", "lukewarm", "cold"));
     }
 }
 #endif
