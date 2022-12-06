@@ -398,7 +398,7 @@ namespace AZ::ShaderCompiler
     {
         // for (a;b;c) block is special, because it has a special power of symbol definition in the 'a' block.
         //             therefore we enter the anonymous scope right before 'a'
-        m_ir->m_sema.MakeAndEnterAnonymousScope(DecorateAnonymous("for"), ctx->LeftParen()->getSymbol(), ctx);
+        m_ir->m_sema.MakeAndEnterAnonymousScope("for", ctx->LeftParen()->getSymbol(), ctx);
     }
 
     void SemaCheckListener::exitForStatement(azslParser::ForStatementContext* ctx)
@@ -411,7 +411,7 @@ namespace AZ::ShaderCompiler
         if (!Is< azslParser::HlslFunctionDefinitionContext >(ctx->parent)  // not function because we already entered
             && !Is< azslParser::ForStatementContext >(ctx->parent))  // not for statement because we already entered
         {
-            m_ir->m_sema.MakeAndEnterAnonymousScope(DecorateAnonymous("bk"), ctx->start, ctx);
+            m_ir->m_sema.MakeAndEnterAnonymousScope("bk", ctx->start, ctx);
         }
     }
 
@@ -426,7 +426,7 @@ namespace AZ::ShaderCompiler
 
     void SemaCheckListener::enterSwitchBlock(azslParser::SwitchBlockContext* ctx)
     {
-        m_ir->m_sema.MakeAndEnterAnonymousScope(DecorateAnonymous("sw"), ctx->start, ctx);
+        m_ir->m_sema.MakeAndEnterAnonymousScope("sw", ctx->start, ctx);
     }
 
     void SemaCheckListener::exitSwitchBlock(azslParser::SwitchBlockContext* ctx)
@@ -436,13 +436,14 @@ namespace AZ::ShaderCompiler
 
     void SemaCheckListener::enterNamespaceStatement(azslParser::NamespaceStatementContext* ctx)
     {
-        UnqualifiedName uqName = ExtractNameFromIdExpression(ctx->Name);
+        UnqualifiedName uqName = ctx->Name ? ExtractNameFromIdExpression(ctx->Name) : UnqualifiedName{};
         m_ir->m_sema.MakeAndEnterNamespaceScope(uqName, ctx->start, ctx);
     }
 
     void SemaCheckListener::exitNamespaceStatement(azslParser::NamespaceStatementContext* ctx)
     {
-        m_ir->m_scope.ExitScope(ctx->stop->getTokenIndex());
+        UnqualifiedName uqName = ctx->Name ? ExtractNameFromIdExpression(ctx->Name) : UnqualifiedName{};
+        m_ir->m_sema.ExitNamespaceScope(uqName, ctx);
     }
 
     void SemaCheckListener::enterFunctionCallExpression(azslParser::FunctionCallExpressionContext* ctx)

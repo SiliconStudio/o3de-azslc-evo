@@ -32,6 +32,9 @@ namespace AZ::ShaderCompiler
         //! Typically hidden symbols added by the compiler such as implicit structs or padding fields.
         void MigrateOrder(const IdentifierUID& symbol, const IdentifierUID& before);
 
+        //! Move a symbol at the end of the current order list as it stands
+        void MigrateOrderToLast(const IdentifierUID& symbol);
+
         //! Return true if found and deleted
         bool DeleteIdentifier(const IdentifierUID& name);
 

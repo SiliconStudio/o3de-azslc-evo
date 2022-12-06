@@ -245,7 +245,7 @@ namespace AZ::ShaderCompiler
 
     void SymbolAggregator::ReorderBySymbolDependency()
     {
-        auto disambiguatorChar = '#';
+        auto disambiguatorChar = '%';
         // query for symbol kind; because that function is specific to this algorithm, it's ok locally only.
         auto isFunctionOrVariableOrType = [this, disambiguatorChar](string_view name)
         {

@@ -39,6 +39,12 @@ namespace AZ::ShaderCompiler
         return kind.IsOneOf(Kind::Type, Kind::TypeAlias, Kind::Struct, Kind::Class, Kind::Enum, Kind::Interface);
     }
 
+    struct NamespaceInfo
+    {
+        IdentifierUID m_original;
+        vector<IdentifierUID> m_reEntries; //!< namespaces are duplicated uppon re-entry by a number suffix, this is the list
+    };
+
     struct SRGSemanticInfo
     {
         optional<int64_t> m_frequencyId;
@@ -848,9 +854,10 @@ namespace AZ::ShaderCompiler
     //! store data about code semantics for any sort of thing in the language. (a "sort of thing in the language" is a Kind)
     struct KindInfo
     {
-        using AnyKind = variant< monostate, VarInfo, FunctionInfo, OverloadSetInfo, ClassInfo, SRGInfo, TypeRefInfo, TypeAliasInfo >;
+        using AnyKind = variant< monostate, VarInfo, FunctionInfo, OverloadSetInfo, ClassInfo, SRGInfo, TypeRefInfo, TypeAliasInfo, NamespaceInfo >;
 
         using MapKindToTypesT = TypeList<
+            ConstVal< Kind::Namespace >,                   NamespaceInfo,
             ConstVal< Kind::Type >,                        TypeRefInfo,
             ConstVal< Kind::TypeAlias >,                   TypeAliasInfo,
             ConstVal< Kind::Variable >,                    VarInfo,
@@ -936,8 +943,6 @@ namespace AZ::ShaderCompiler
         template<Kind::EnumType k>
         auto& GetSubAfterInitAs()
         {
-            static_assert(k != Kind::Namespace, "There is no subinfo for namespaces. just initialize the m_kind member.");
-
             InitAs(k);
 
             // lookup the concrete type from the kind since they can be mapped surjectively
@@ -1048,6 +1053,11 @@ namespace AZ::ShaderCompiler
         QualifiedName operator()(const SRGInfo&) const
         {
             return m_uid.GetName(); // this is not really a type, but whatever
+        }
+
+        QualifiedName operator()(const NamespaceInfo& nsi) const
+        {
+            return nsi.m_original.GetName(); // same. not a type. but as close as it gets (functions like the scope of a UDT)
         }
 
         QualifiedName operator()(const TypeRefInfo& tri) const

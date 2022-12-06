@@ -361,10 +361,13 @@ namespace AZ::ShaderCompiler
         auto ResolveOverload(IdAndKind* maybeOverloadSet, azslParser::ArgumentListContext* argumentListCtx) const -> IdAndKind*;
 
         //! Generate a unique name, create a corresponding namespace symbol, and enter its scope
-        void MakeAndEnterAnonymousScope(string_view decorationPrefix, Token* scopeFirstToken, ParserRuleContext* ctx);
+        void MakeAndEnterAnonymousScope(string_view blockKind, Token* scopeFirstToken, ParserRuleContext* ctx);
 
         //! create a named namespace symbol
         void MakeAndEnterNamespaceScope(UnqualifiedNameView name, Token* scopeFirstToken, ParserRuleContext* ctx);
+
+        //! close scope and migrate srginfo at the last position of the ordered symbol list
+        void ExitNamespaceScope(UnqualifiedNameView name, azslParser::NamespaceStatementContext* ctx);
 
     private:
         //! for internal use when encountering unresolved symbols by lookup.
@@ -394,6 +397,5 @@ namespace AZ::ShaderCompiler
     private:
         // remember frequencyId to srg association, for semantic validation
         unordered_map<int64_t, IdentifierUID> m_frequencyToSrg;
-        int m_anonymousCounter;
     };
 }

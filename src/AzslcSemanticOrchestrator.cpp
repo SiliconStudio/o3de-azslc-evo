@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (c) Contributors to the Open 3D Engine Project.
  * For complete copyright and license terms please see the LICENSE at the root of this distribution.
  *
@@ -66,8 +66,7 @@ namespace AZ::ShaderCompiler
     SemanticOrchestrator::SemanticOrchestrator(SymbolAggregator* sema, ScopeTracker* scope, azslLexer* lexer)
         : m_symbols{ sema },
           m_scope{ scope },
-          m_lexer{ lexer },
-          m_anonymousCounter{ 0 }
+          m_lexer{ lexer }
     {
         assert(sema != nullptr && scope != nullptr);
     }
@@ -699,9 +698,8 @@ namespace AZ::ShaderCompiler
         }
 
         auto& [curScope, _] = GetCurrentScopeIdAndKind();
-        string srgInfoName = JoinPath(curScope.m_name, "_srgInfoSymbol_");
-        srgInfoName = RemoveUnnamedScopeUniquifier(srgInfoName);
-        auto srgInfoUID = IdentifierUID{QualifiedName{srgInfoName}};
+        QualifiedName srgInfoName{JoinPath(curScope.m_name, "_srgInfoSymbol_")};
+        IdentifierUID srgInfoUID{srgInfoName};
         auto& srgInfo = *m_symbols->GetAsSub<SRGInfo>(srgInfoUID);
 
         TypeClass typeClass = varInfo.GetTypeClass();
@@ -1992,33 +1990,41 @@ namespace AZ::ShaderCompiler
         return scopeKind.IsKindOneOf(Kind::Struct, Kind::Class, Kind::Interface);
     }
 
-    void SemanticOrchestrator::MakeAndEnterAnonymousScope(string_view decorationPrefix, Token* scopeFirstToken, ParserRuleContext* ctx)
+    void SemanticOrchestrator::MakeAndEnterAnonymousScope(string_view blockKind, Token* scopeFirstToken, ParserRuleContext* ctx)
     {
-        UnqualifiedName unnamedBlockCode{Replace(string{decorationPrefix}, "#", ToString(m_anonymousCounter))};
+        UnqualifiedName unnamedBlockCode{DecorateAnonymousBlock(blockKind)};
         AddIdentifier(unnamedBlockCode, Kind::Namespace, scopeFirstToken->getLine());
         m_scope->EnterScope(unnamedBlockCode, scopeFirstToken->getTokenIndex());
-        ++m_anonymousCounter;
     }
 
     void SemanticOrchestrator::MakeAndEnterNamespaceScope(UnqualifiedNameView name, Token* scopeFirstToken, ParserRuleContext* ctx)
     {
         assert(!IsIn('#', name));
-        UnqualifiedName finalName{name};
-        if (name.empty())  // Anonymous namespace
-        {
-            finalName = UnqualifiedName{ConcatString("$namespace", m_anonymousCounter, "$", name)};
-        }
-        if (LookupSymbol(finalName))
+        UnqualifiedName finalUqName{MangleNamespaceName(name)};
+        QualifiedName finalName = MakeFullyQualified(finalUqName);
+        // anonymous namespaces just have empty name (and will thus be $namespace:$)
+        // all reopening of the a namespace at the same scope will be the same namespace, including anonymous.
+        // (anon namespace is unique per scope, as per C++ standard § 7.3.1.1:
+        // "and all occurrences of unique in a translation unit are replaced by the same identifier")
+        IdAndKind* previously = m_symbols->GetIdAndKindInfo(finalName);
+        if (previously)
         {
             // Namespaces can be reopened and extended, they are not redeclared.
-            return;  // Nothing special to do in that case.
+            // that said. with current emission scheme, it will merge all symbols under one namespace
+            // if we don't somehow keep record of the reopening places.
+            finalName = QualifiedName{AppendBlockReopeningSuffix(finalName)};
         }
-        auto& [id, kind] = AddIdentifier(finalName, Kind::Namespace, scopeFirstToken->getLine());
-        m_scope->EnterScope(finalName, scopeFirstToken->getTokenIndex());
-        ++m_anonymousCounter;
+        auto& [id, kind] = m_symbols->AddIdentifier(finalName, Kind::Namespace, scopeFirstToken->getLine());
+        if (previously)
+        {
+            previously->second.GetSubRefAs<NamespaceInfo>().m_reEntries.push_back(id); // keep track
+        }
+        kind.GetSubRefAs<NamespaceInfo>().m_original = previously ? previously->first : id;
+        m_scope->EnterScope(finalUqName, scopeFirstToken->getTokenIndex());
 
         // Check for special case: the namespace is an SRG (marked by attribute)
-        if (optional<AttributeInfo> attr = m_symbols->GetAttribute(id, "SRG"))
+        optional<AttributeInfo> attr = m_symbols->GetAttribute(id, "SRG");
+        if (attr && !previously)
         {
             string semantic = std::get<string>(attr->m_argList.front());
 
@@ -2027,16 +2033,27 @@ namespace AZ::ShaderCompiler
             size_t line        = scopeFirstToken->getLine();
             verboseCout << line << ": fake srg decl: " << idText << "\n";
             auto uqNameView    = UnqualifiedNameView{ idText };
-            IdAndKind* srgSym  = LookupSymbol(uqNameView);
-            if (!srgSym) // Already exists (case of partial. which is natural now with namespaces)
-            {
-                auto& symbol = AddIdentifier(uqNameView, Kind::ShaderResourceGroup, line);
-                // Now fillup what we can about the kindinfo:
-                auto& [uid, info] = symbol;
-                SRGInfo& srgInfo = info.GetSubAfterInitAs<Kind::ShaderResourceGroup>();
-                srgInfo.m_declNode = ctx;
-                srgInfo.m_implicitStruct.m_kind = Kind::Struct;
-            }
+            assert(!LookupSymbol(uqNameView));  // not possible. would mean that the 'previously' condition didn't work
+            auto& symbol = AddIdentifier(uqNameView, Kind::ShaderResourceGroup, line);
+            // Now fillup what we can about the kindinfo:
+            auto& [uid, info] = symbol;
+            SRGInfo& srgInfo = info.GetSubAfterInitAs<Kind::ShaderResourceGroup>();
+            srgInfo.m_declNode = ctx;
+            srgInfo.m_implicitStruct.m_kind = Kind::Struct;
         }
+    }
+
+    void SemanticOrchestrator::ExitNamespaceScope(UnqualifiedNameView, azslParser::NamespaceStatementContext* ctx)
+    {
+        IdentifierUID prevNs, curNsName;
+        prevNs = curNsName = GetCurrentScopeIdAndKind().first;
+        auto* nsInfo = m_symbols->GetAsSub<NamespaceInfo>(curNsName);
+        if (nsInfo->m_reEntries.size() >= 2)
+        {
+            prevNs = *(nsInfo->m_reEntries.end() - 2);
+        }
+        QualifiedName srgInfoName{JoinPath(prevNs.m_name, "_srgInfoSymbol_")};
+        m_symbols->m_elastic.MigrateOrderToLast({srgInfoName});  // carry over to end
+        m_scope->ExitScope(ctx->RightBrace()->getSourceInterval().b);
     }
 }

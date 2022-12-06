@@ -143,7 +143,7 @@ namespace AZ::ShaderCompiler
                 if (!ContainsAnySub(iteratedSymbolName, "$bk", "$for", "$sw"))
                 {
                     m_out << "namespace "
-                          << RemoveUnnamedScopeUniquifier(
+                          << ExtractNamespaceName(
                              GetTranslatedName(iteratedSymbolUid, UsageContext::DeclarationSite))
                           << " {\n";
 
@@ -1002,7 +1002,7 @@ namespace AZ::ShaderCompiler
         }
 
         const auto& bindInfo = rootSig.Get(srgId);
-        m_out << "ConstantBuffer " << "NONAME" /*srgInfo.m_declNode->Name->getText() TODO-AZSLC2 */ << "_CBContainer : register(b" << bindInfo.m_registerBinding.m_pair[bindSet].m_registerIndex << ")\n{\n";
+        m_out << "ConstantBuffer " << GetParentName(srgId.m_name) << "_CBContainer : register(b" << bindInfo.m_registerBinding.m_pair[bindSet].m_registerIndex << ")\n{\n";
 
         for (const auto& cId : srgInfo.m_CBs)
         {
@@ -1074,7 +1074,7 @@ namespace AZ::ShaderCompiler
 
         const string spaceX = ", space" + std::to_string(bindInfo.m_registerBinding.m_pair[bindSet].m_logicalSpace);
         m_out << (varInfo->m_samplerState->m_isComparison ? "SamplerComparisonState " : "SamplerState ")
-              << ReplaceSeparators(sId.m_name, Underscore);
+              << GetTranslatedName(sId.m_name, UsageContext::DeclarationSite);
         if (bindInfo.m_isUnboundedArray)
         {
             m_out << "[]";
@@ -1204,7 +1204,7 @@ namespace AZ::ShaderCompiler
         m_out << "/* Generated code from ";
         // We don't emit the SRG attributes (only as a comment), but they can be accessed by the srgId if needed
         EmitAllAttachedAttributes(srgId);
-        m_out << " ShaderResourceGroup " << "NONAME" /* srgInfo.m_declNode->Name->getText() // TODO-AZSLC2 */ << "*/\n";
+        m_out << " ShaderResourceGroup " << GetParentName(srgId.m_name) << "*/\n";
 
         for (const auto& t : srgInfo.m_srViews)
         {

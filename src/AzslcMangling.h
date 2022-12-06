@@ -211,24 +211,93 @@ namespace AZ::ShaderCompiler
         return ReplaceSeparators(strategy == PreserveArgumentsUnicity ? FlattenParenthesisGroups(name) : RemoveMatchedParenthesis(name), Underscore);
     }
 
+    struct PathPart
+    {
+        string_view m_slice;
+        size_t      m_sliceBegin;
+        size_t      m_sliceLen;
+    };
+
+    //! When there is no need to create the split path in memory
+    //! FunctionObject will be fed a PathPart as parameter, and called for each part.
+    //! The behavior is the same as SplitPath function, please refer to it for behavior document.
+    template <typename FunctionObject>
+    void ForEachPathPart(string_view path, FunctionObject action)
+    {
+        size_t start = 0;
+        size_t pathLen = path.length();
+        // character by character. cp=character position
+        for (size_t cp = 0; cp < pathLen; ++cp)
+        {
+            bool isLast = cp + 1 == path.length();
+            bool isSlash = path[cp] == '/' && !WithinMatchedParentheses(path, cp);
+            if (isSlash || isLast)
+            {
+                size_t count = cp - start + (isLast && !isSlash ? 1 : 0);
+                action(PathPart{path.substr(start, count), start, count});
+                start = cp + 1;
+                if (isSlash && isLast) // we need to call again for the end part, to signal it exists but is empty
+                {
+                    action(PathPart{path.substr(start, 0), start, 0});
+                }
+            }
+        }
+    }
+
+    //! examples ["", "A", "Leaf"] from "/A/Leaf"
+    //!          ["A", "Leaf"] from "A/Leaf"
+    //!          ["A", "Leaf", ""] from "A/Leaf/"
+    inline vector<string_view> SplitPath(string_view path)
+    {
+        const size_t numSlashes = count(path.begin(), path.end(), '/'); // in the case of "/X(/a)" numSlashes overshoots, so we only use it for reservation
+        vector<string_view> split;
+        split.reserve(numSlashes);
+        ForEachPathPart(path, [&split](const PathPart& ppart)
+                        {
+                            split.push_back(ppart.m_slice);
+                        });
+        return split;
+    }
+
     //! "?int" to "int" (partial unmangling)
     inline string_view RemoveFloatingMark(string_view name)
     {
         return StartsWith(name, "?") ? Slice(name, 1, -1) : name;
     }
 
-    inline string RemoveUnnamedScopeUniquifier(string name)
+    //! MyNS in "$namespace:MyNS$~1"
+    inline string_view ExtractNamespaceName(string_view mangled)
     {
-        return std::regex_replace(name, std::regex("\\$\\w*\\d*\\$"), "");  // eg: $word3$
+        auto colon = mangled.find(":");
+        auto dollar = mangled.find("$", colon + 1);
+        return colon != string_view::npos && dollar != string_view::npos
+            ? Slice(mangled, colon + 1, dollar)
+            : "";
+    }
+
+    //! $namespace:Mine$ in "$namespace:Mine$~1"
+    inline string RemoveNamespaceReentryUniquifier(string mangled)
+    {
+        return std::regex_replace(mangled, std::regex("~\\d+"), "");
+    }
+
+    inline string RemoveBlockMangling(string_view name)
+    {
+        assert(!IsIn('#', name));  // # may only have been temporarily present.
+        assert(std::count(name.begin(), name.end(), '$') <= 2);  // can't support non-split paths. only 1 block at a time here
+        string ns{ExtractNamespaceName(name)};
+        return std::regex_replace(string{name}, std::regex("\\$(namespace:)?\\w*\\$\\d*(~\\d+)?"), ns);  // eg: $namespace:word$~1 or "$for$2"
     }
 
     //! Change from AZIR form to HLSL form
-    //! eg "/SRG/func(?int)/$bk1$/mem" to "::SRG::mem::func::mem"
-    inline string UnMangle(string name)
+    //! eg "/SRG/func(?int)/$bk$1/mem" to "::SRG::mem::func::mem"
+    inline string UnMangle(string_view a_name)
     {
-        name = RemoveUnnamedScopeUniquifier(name);
-        name = Replace(name, "//", "/");
-        name = Replace(name, "/", "::");
+        auto parts = SplitPath(a_name);
+        vector<string> out;
+        TransformCopy(parts, out, RemoveBlockMangling);
+        string name = Join(out, "/");
+        name = std::regex_replace(name, std::regex("//*"), "::");
         name = Replace(name, "?", "");
         name = RemoveMatchedParenthesis(name);
         return name;
@@ -383,42 +452,9 @@ namespace AZ::ShaderCompiler
         return QualifiedNameView{GetParentName(QualifiedNameView{path})};
     }
 
-    struct PathPart
-    {
-        string_view m_slice;
-        size_t      m_sliceBegin;
-        size_t      m_sliceLen;
-    };
-
     inline bool IsGlobal(QualifiedNameView sym)
     {
         return GetParentName(sym) == "/";
-    }
-
-    //! When there is no need to create the split path in memory
-    //! FunctionObject will be fed a PathPart as parameter, and called for each part.
-    //! The behavior is the same as SplitPath function, please refer to it for behavior document.
-    template <typename FunctionObject>
-    void ForEachPathPart(string_view path, FunctionObject action)
-    {
-        size_t start = 0;
-        size_t pathLen = path.length();
-        // character by character. cp=character position
-        for (size_t cp = 0; cp < pathLen; ++cp)
-        {
-            bool isLast = cp + 1 == path.length();
-            bool isSlash = path[cp] == '/' && !WithinMatchedParentheses(path, cp);
-            if (isSlash || isLast)
-            {
-                size_t count = cp - start + (isLast && !isSlash ? 1 : 0);
-                action(PathPart{path.substr(start, count), start, count});
-                start = cp + 1;
-                if (isSlash && isLast) // we need to call again for the end part, to signal it exists but is empty
-                {
-                    action(PathPart{path.substr(start, 0), start, 0});
-                }
-            }
-        }
     }
 
     //! returns true if supposedChild is contained in supposedParent
@@ -426,21 +462,6 @@ namespace AZ::ShaderCompiler
     inline bool IsParent(string_view supposedParent, string_view supposedChild)
     {
         return supposedChild.size() > supposedParent.size() && supposedParent == supposedChild.substr(0, supposedParent.size());
-    }
-
-    //! examples ["", "A", "Leaf"] from "/A/Leaf"
-    //!          ["A", "Leaf"] from "A/Leaf"
-    //!          ["A", "Leaf", ""] from "A/Leaf/"
-    inline vector<string_view> SplitPath(string_view path)
-    {
-        const size_t numSlashes = count(path.begin(), path.end(), '/'); // in the case of "/X(/a)" numSlashes overshoots, so we only use it for reservation
-        vector<string_view> split;
-        split.reserve(numSlashes);
-        ForEachPathPart(path, [&split](const PathPart& ppart)
-                        {
-                            split.push_back(ppart.m_slice);
-                        });
-        return split;
     }
 
     //! counts the number of slashes.
@@ -473,10 +494,26 @@ namespace AZ::ShaderCompiler
         return Decorate("(", Join(begin, end, ","), ")");
     }
 
-    //! # is a marker to later replace with a uniquifying counter.
-    inline string DecorateAnonymous(string decoration)
+    //! create a uniquifier number and markers.
+    //! e.g. $for$2
+    inline string DecorateAnonymousBlock(string_view blockKind)
     {
-        return ConcatString("$", decoration, "#$");
+        static int uniquifier;
+        return ConcatString("$", blockKind, "$", uniquifier++);
+    }
+
+    //! create mangling for namespaces eg "$namespace:Material$"
+    inline string MangleNamespaceName(string_view uqIdentifier)
+    {
+        return ConcatString("$namespace:", uqIdentifier, "$");
+    }
+
+    //! will append a uniquifier to a symbol so that it can exist multiple times in the table.
+    //! this is necessary for reopening namespaces
+    inline string AppendBlockReopeningSuffix(string_view rootName)
+    {
+        static int uniquifier;
+        return ConcatString(rootName, "~", uniquifier++);
     }
 
     //! The key to any symbol
@@ -622,10 +659,19 @@ namespace AZ::Tests
         assert(JoinPath("", "A") == "/A");
         assert(JoinPath("", "A", JoinPolicy::EmptyMeansEmpty) == "A");
 
+        assert(ExtractNamespaceName("/noSpecialMangling") == "");
+        assert(ExtractNamespaceName("/$namespace:$") == "");
+        assert(ExtractNamespaceName("/$namespace:$~60") == "");
+        assert(ExtractNamespaceName("/$namespace:MyIdentifier_5$~60") == "MyIdentifier_5");
+
+        assert(RemoveNamespaceReentryUniquifier("truc") == "truc");
+        assert(RemoveNamespaceReentryUniquifier("truc/$namespace:ns$~12/t") == "truc/$namespace:ns$/t");
+
         assert(UnMangle("/func(?int, f2())") == "::func");
         assert(UnMangle("/class/member") == "::class::member");
         assert(UnMangle("?matrix4x4") == "matrix4x4");
-        assert(UnMangle("/$namespace44$MaterialSRG") == "::MaterialSRG");
+        assert(UnMangle("/$namespace:MaterialSRG$44") == "::MaterialSRG");
+        assert(UnMangle("/main()/$for$12/$bk$4/a") == "::main::a");
 
         assert(IsLeafDecoratedByArguments("/func()"));
         assert(IsLeafDecoratedByArguments("/func(?int)"));

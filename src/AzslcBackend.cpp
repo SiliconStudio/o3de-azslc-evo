@@ -22,12 +22,12 @@ namespace AZ::ShaderCompiler
 
     QualifiedName MakeSrgConstantsStructName(IdentifierUID srg)
     {
-        return QualifiedName{srg.m_name + "_SRGConstantsStruct"};
+        return QualifiedName{srg.m_name + "_srgConstantsStruct"};
     }
 
     QualifiedName MakeSrgConstantsCBName(IdentifierUID srg)
     {
-        return QualifiedName{srg.m_name + "_SRGConstantBuffer"};
+        return QualifiedName{srg.m_name + "_srgConstantBuffer"};
     }
 
     string UnmangleTrimedName(const QualifiedNameView name)

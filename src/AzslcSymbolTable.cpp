@@ -40,6 +40,13 @@ namespace AZ::ShaderCompiler
         return found;
     }
 
+    void SymbolTable::MigrateOrderToLast(const IdentifierUID& symbol)
+    {
+        assert(m_symbols.find(symbol) != m_symbols.end());
+        m_order.erase(std::remove(m_order.begin(), m_order.end(), symbol), m_order.end());
+        m_order.push_back(symbol);
+    }
+
     void SymbolTable::MigrateOrder(const IdentifierUID& symbol, const IdentifierUID& before)
     {
         // For use in PadToAttributeMutator::InsertPaddingVariables::createVariableInSymbolTable
