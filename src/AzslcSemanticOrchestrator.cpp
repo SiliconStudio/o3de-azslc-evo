@@ -1488,36 +1488,35 @@ namespace AZ::ShaderCompiler
         }
     }
 
-    void SemanticOrchestrator::ValidateSrg(ParserRuleContext* ctx) noexcept(false)
+    void SemanticOrchestrator::ValidateSrg(const QualifiedName& srgInfoName, azslParser::NamespaceStatementContext* ctx) noexcept(false)
     {
-        // TODO-AZSLC2
-        /*
-        auto& srgInfo = GetCurrentScopeSubInfoAs<SRGInfo>();
+        auto& srgInfo = *m_symbols->GetAsSub<SRGInfo>({srgInfoName});
 
-        if (ctx->Semantic)
+        optional<AttributeInfo> attr = m_symbols->GetAttribute(GetCurrentScopeIdAndKind().first, "SRG");
+        if (attr->m_argList.size() == 1 && holds_alternative<string>(attr->m_argList[0]))
         {
-            string semanticName = ctx->Semantic->getText();
+            string semanticName{Undecorate("\"", {get<string>(attr->m_argList[0])})};
             if (srgInfo.m_semantic)
             {
-                // We only care the specified semantic is the same as the currently defined semantic for the srg.
+                // We only care if the specified semantic is the same as the currently defined semantic for the srg.
                 if (srgInfo.m_semantic->GetNameLeaf() != semanticName)
                 {
-                    const LineDirectiveInfo* originalSrglineInfo = AzslcException::s_lineFinder->GetNearestPreprocessorLineDirective(srgInfo.m_declNode->Semantic->getLine());
+                    const LineDirectiveInfo* originalSrglineInfo = AzslcException::s_lineFinder->GetNearestPreprocessorLineDirective(ctx->Name->start->getLine());
                     string errorMsg = FormatString("'partial' extension of ShaderResourceGroup [%s] with semantic [%s] shall not bind a different semantic than [%s] found in line %u of %s",
                         ctx->Name->getText().c_str(), semanticName.c_str(), srgInfo.m_semantic->GetNameLeaf().c_str(),
                         originalSrglineInfo->m_forcedLineNumber, originalSrglineInfo->m_containingFilename.c_str());
-                    throw AzslcOrchestratorException{ORCHESTRATOR_SRG_EXTENSION_HAS_DIFFERENT_SEMANTIC, ctx->Semantic, errorMsg};
+                    throw AzslcOrchestratorException{ORCHESTRATOR_SRG_EXTENSION_HAS_DIFFERENT_SEMANTIC, ctx->start, errorMsg};
                 }
                 // All is good.
                 return;
             }
 
             // Make sure the SRG is referencing a registered srgSemantic (and of the correct kind)
-            auto uqName = UnqualifiedNameView{ semanticName };
+            UnqualifiedName uqName{JoinPath(GetCurrentParentScopeIdAndKind().first.m_name, semanticName)};
             auto semanticSymbol = LookupSymbol(uqName);
             if (!semanticSymbol)
             {
-                throw AzslcOrchestratorException{ORCHESTRATOR_INVALID_SEMANTIC_DECLARATION, ctx->ShaderResourceGroup()->getSymbol(),
+                throw AzslcOrchestratorException{ORCHESTRATOR_INVALID_SEMANTIC_DECLARATION, ctx->start,
                                                  ConcatString("Declaration for semantic ", semanticName, " used in SRG ", ctx->Name->getText(), " was not found")};
             }
 
@@ -1525,7 +1524,7 @@ namespace AZ::ShaderCompiler
             Kind kind = semanticSymKind.GetKind();
             if (kind != Kind::ShaderResourceGroupSemantic)
             {
-                throw AzslcOrchestratorException{ORCHESTRATOR_INVALID_SEMANTIC_DECLARATION_TYPE, ctx->ShaderResourceGroup()->getSymbol(),
+                throw AzslcOrchestratorException{ORCHESTRATOR_INVALID_SEMANTIC_DECLARATION_TYPE, ctx->start,
                                                  ConcatString("Declaration for ", semanticName, " used in SRG ", ctx->Name->getText(),
                                                               " is a ", Kind::ToStr(kind).data(),
                                                               " but expected a ", Kind::ToStr(Kind::ShaderResourceGroupSemantic).data())};
@@ -1539,7 +1538,7 @@ namespace AZ::ShaderCompiler
             }
             else if (userSrgIterator->second != srgId)
             {
-                throw AzslcOrchestratorException{ORCHESTRATOR_SRG_REUSES_A_FREQUENCY, ctx->ShaderResourceGroup()->getSymbol(),
+                throw AzslcOrchestratorException{ORCHESTRATOR_SRG_REUSES_A_FREQUENCY, ctx->start,
                                                  ConcatString("SRG ", ctx->Name->getText(), " reuses frequencyId "
                                                               , userSrgIterator->first, " already used by ",
                                                               userSrgIterator->second)};
@@ -1554,7 +1553,7 @@ namespace AZ::ShaderCompiler
                 int keyLength = ((variantFallbackValue + kShaderVariantKeyRegisterSize - 1) / kShaderVariantKeyRegisterSize) * kShaderVariantKeyRegisterSize;
                 if (keyLength > variantFallbackValue)
                 {
-                    PrintWarning(Warn::W1, ctx->ShaderResourceGroup()->getSymbol(),
+                    PrintWarning(Warn::W1, ctx->start,
                                  "ShaderVariantFallback requires ", variantFallbackValue,
                                  " bits, but will be bumped up to ", keyLength, " bits for padding.");
                 }
@@ -1632,7 +1631,6 @@ namespace AZ::ShaderCompiler
                                  " must be a struct, but seen as ", Kind::ToStr(kind.GetKind()).data())};
             }
         }
-        */
     }
 
     optional<int64_t> SemanticOrchestrator::TryFoldSRGSemantic(azslParser::SrgSemanticContext* ctx, size_t semanticTokenType, bool required)
@@ -2019,13 +2017,15 @@ namespace AZ::ShaderCompiler
         {
             previously->second.GetSubRefAs<NamespaceInfo>().m_reEntries.push_back(id); // keep track
         }
-        kind.GetSubRefAs<NamespaceInfo>().m_original = previously ? previously->first : id;
+        NamespaceInfo& nsInfo = kind.GetSubRefAs<NamespaceInfo>();
+        nsInfo.m_original = previously ? previously->first : id;
         m_scope->EnterScope(finalUqName, scopeFirstToken->getTokenIndex());
 
         // Check for special case: the namespace is an SRG (marked by attribute)
         optional<AttributeInfo> attr = m_symbols->GetAttribute(id, "SRG");
         if (attr && !previously)
         {
+            nsInfo.m_isSrg = true;
             string semantic = std::get<string>(attr->m_argList.front());
 
             // Register a fake SRGInfo
@@ -2052,8 +2052,12 @@ namespace AZ::ShaderCompiler
         {
             prevNs = *(nsInfo->m_reEntries.end() - 2);
         }
-        QualifiedName srgInfoName{JoinPath(prevNs.m_name, "_srgInfoSymbol_")};
-        m_symbols->m_elastic.MigrateOrderToLast({srgInfoName});  // carry over to end
+        if (nsInfo->m_isSrg)
+        {
+            QualifiedName srgInfoName{JoinPath(prevNs.m_name, "_srgInfoSymbol_")};
+            m_symbols->m_elastic.MigrateOrderToLast({srgInfoName});  // carry over to end
+            ValidateSrg(srgInfoName, ctx);
+        }
         m_scope->ExitScope(ctx->RightBrace()->getSourceInterval().b);
     }
 }

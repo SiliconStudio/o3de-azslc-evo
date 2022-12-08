@@ -237,7 +237,7 @@ namespace AZ::ShaderCompiler
         // Will diagnose-throw if multiple bases have the candidate symbol's name.
         auto GetSymbolHiddenInBase(IdentifierUID hidingCandidate) -> IdAndKind*;
 
-        void ValidateSrg(ParserRuleContext* ctx) noexcept(false);
+        void ValidateSrg(const QualifiedName& srgInfoName, azslParser::NamespaceStatementContext* ctx) noexcept(false);
 
         void ValidateSrgSemantic(azslParser::SrgSemanticContext* ctx) noexcept(false);
 

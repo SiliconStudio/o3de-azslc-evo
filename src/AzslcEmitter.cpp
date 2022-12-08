@@ -356,7 +356,7 @@ namespace AZ::ShaderCompiler
                 }
             }
 
-            // variables get special treatment in case of non-emitConstantBufferBody, because SRG-constants go in a generated-struct: <SRGNAME>_SRGConstantStruct
+            // variables get special treatment in case of non-emitConstantBufferBody, because SRG-constants go in a generated-struct: <SRGNAME>_srgConstantStruct
             for (auto& member : srgInfo->m_implicitStruct.GetMemberFields())
             {
                 auto globalScope = QualifiedNameView{"/"};
@@ -390,7 +390,7 @@ namespace AZ::ShaderCompiler
                 for_each(srgInfo->m_implicitStruct.GetMemberFields().begin(), srgInfo->m_implicitStruct.GetMemberFields().end(), [this, srgUID=srgUID](IdentifierUID fieldUid)
                          {
                             // the natural suggestion from the translation system is going to be
-                            // to mutate MyRsc::m_f4 to MyRsc_SRGConstantStruct::MyRsc_m_f4
+                            // to mutate MyRsc::m_f4 to MyRsc_srgConstantStruct::MyRsc_m_f4
                             // which is the "address" of the variable declaration, but not where the instance reside.
                             // we need to mutate this to MyRsc_SRGConstantBuffer.MyRsc_m_f4
                             m_translations.AddCustomBehavior(fieldUid.GetName(),

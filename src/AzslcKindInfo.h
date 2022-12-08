@@ -41,6 +41,7 @@ namespace AZ::ShaderCompiler
 
     struct NamespaceInfo
     {
+        bool m_isSrg = false;  //!< true for namespaces decorated with an [[SRG]] attribute
         IdentifierUID m_original;
         vector<IdentifierUID> m_reEntries; //!< namespaces are duplicated uppon re-entry by a number suffix, this is the list
     };
