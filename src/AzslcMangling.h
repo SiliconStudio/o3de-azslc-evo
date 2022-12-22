@@ -259,101 +259,6 @@ namespace AZ::ShaderCompiler
         return split;
     }
 
-    //! "?int" to "int" (partial unmangling)
-    inline string_view RemoveFloatingMark(string_view name)
-    {
-        return StartsWith(name, "?") ? Slice(name, 1, -1) : name;
-    }
-
-    //! MyNS in "$namespace:MyNS$~1"
-    inline string_view ExtractNamespaceName(string_view mangled)
-    {
-        auto colon = mangled.find(":");
-        auto dollar = mangled.find("$", colon + 1);
-        return colon != string_view::npos && dollar != string_view::npos
-            ? Slice(mangled, colon + 1, dollar)
-            : "";
-    }
-
-    //! $namespace:Mine$ in "$namespace:Mine$~1"
-    inline string RemoveNamespaceReentryUniquifier(string mangled)
-    {
-        return std::regex_replace(mangled, std::regex("~\\d+"), "");
-    }
-
-    inline string RemoveBlockMangling(string_view name)
-    {
-        assert(!IsIn('#', name));  // # may only have been temporarily present.
-        assert(std::count(name.begin(), name.end(), '$') <= 2);  // can't support non-split paths. only 1 block at a time here
-        string ns{ExtractNamespaceName(name)};
-        return std::regex_replace(string{name}, std::regex("\\$(namespace:)?\\w*\\$\\d*(~\\d+)?"), ns);  // eg: $namespace:word$~1 or "$for$2"
-    }
-
-    //! Change from AZIR form to HLSL form
-    //! eg "/SRG/func(?int)/$bk$1/mem" to "::SRG::mem::func::mem"
-    inline string UnMangle(string_view a_name)
-    {
-        auto parts = SplitPath(a_name);
-        vector<string> out;
-        TransformCopy(parts, out, RemoveBlockMangling);
-        string name = Join(out, "/");
-        name = std::regex_replace(name, std::regex("//*"), "::");
-        name = Replace(name, "?", "");
-        name = RemoveMatchedParenthesis(name);
-        return name;
-    }
-
-    //! Attempt to re-mangle a text-form idExpression but no guarantee about validity as an IdentifierUID. Notably predefined won't get their '?'
-    //! If you have a proper AST context, use ExtractNameFromIdExpression instead.
-    //! eg "SRG::mem" to "SRG/mem"
-    inline string ReMangle(string name)
-    {
-        name = std::regex_replace(name, std::regex("::"), "/");
-        return name;
-    }
-
-    //! in: `anyname` in AzIR format
-    //! split a qualified name and return the last name element
-    //! e.g. "/Stem/Nested/Leaf" returns "Leaf"
-    //! Important note: This does not provide a valid unqualified name, lookup-able from a given scope.
-    //!                 It is merely a string based chopping, that can be used for leaf name comparisons when useful.
-    //! If you want the correct context-valid unqualifying feature, use the SymbolAggregator's FindLeastQualifiedName
-    inline UnqualifiedNameView ExtractLeaf(string_view anyname)
-    {
-        auto lastSlash = anyname.rfind("/");
-        while (WithinMatchedParentheses(anyname, lastSlash))
-        {
-            lastSlash = anyname.rfind("/", lastSlash-1);
-        }
-        if (lastSlash == string::npos)
-        {   // if there is no slash at all, or is not rooted
-            return UnqualifiedNameView{RemoveFloatingMark(anyname)};
-        }
-        return UnqualifiedNameView{RemoveFloatingMark(Slice(anyname, lastSlash + 1, -1))};
-    }
-
-    //! true  if anywhere in the input, a parenthesis appear
-    //!       even in the middle, e.g:  "/A/f(/?int)/b"
-    inline bool ArgumentDecorationExists(string_view name)
-    {
-        return name.find("(") != string::npos;
-    }
-
-    //! true  if the leaf of the input has this sort of form "fun(/T,?int)"
-    //! false if e.g "/X"; e.g "/F(/T)/a"
-    inline bool IsLeafDecoratedByArguments(string_view name)
-    {
-        return !name.empty() && (name.back() == ')' || ArgumentDecorationExists({ExtractLeaf(name)}));
-    }
-
-    inline size_t CountParameters(string_view mangledFunctionName)
-    {
-        auto leaf = ExtractLeaf(mangledFunctionName);
-        return EndsWith(leaf, "()") || !EndsWith(leaf, ")")  // no-arg function or not-a-function
-            ? 0
-            : 1 + std::count(leaf.begin(), leaf.end(), ',');  // this isn't robust if types may hold comma (and it's the case for generics and function-types)
-    }
-
     enum class JoinPolicy
     {
         EmptyMeansRoot,  // empty stem is joined as a root
@@ -483,6 +388,101 @@ namespace AZ::ShaderCompiler
         assert(IsRooted(scope));
         assert(IsLeaf(name));
         return QualifiedName{JoinPath(scope, name)};
+    }
+
+    //! "?int" to "int" (partial unmangling)
+    inline string_view RemoveFloatingMark(string_view name)
+    {
+        return StartsWith(name, "?") ? Slice(name, 1, -1) : name;
+    }
+
+    //! in: `anyname` in AzIR format
+    //! split a qualified name and return the last name element
+    //! e.g. "/Stem/Nested/Leaf" returns "Leaf"
+    //! Important note: This does not provide a valid unqualified name, lookup-able from a given scope.
+    //!                 It is merely a string based chopping, that can be used for leaf name comparisons when useful.
+    //! If you want the correct context-valid unqualifying feature, use the SymbolAggregator's FindLeastQualifiedName
+    inline UnqualifiedNameView ExtractLeaf(string_view anyname)
+    {
+        auto lastSlash = anyname.rfind("/");
+        while (WithinMatchedParentheses(anyname, lastSlash))
+        {
+            lastSlash = anyname.rfind("/", lastSlash-1);
+        }
+        if (lastSlash == string::npos)
+        {   // if there is no slash at all, or is not rooted
+            return UnqualifiedNameView{RemoveFloatingMark(anyname)};
+        }
+        return UnqualifiedNameView{RemoveFloatingMark(Slice(anyname, lastSlash + 1, -1))};
+    }
+
+    //! MyNS in "$namespace:MyNS$~1"
+    inline string_view ExtractNamespaceName(string_view mangled)
+    {
+        auto colon = mangled.find(":");
+        auto dollar = mangled.find("$", colon + 1);
+        return colon != string_view::npos && dollar != string_view::npos
+            ? Slice(mangled, colon + 1, dollar)
+            : "";
+    }
+
+    //! $namespace:Mine$ in "$namespace:Mine$~1"
+    inline string RemoveNamespaceReentryUniquifier(string mangled)
+    {
+        return std::regex_replace(mangled, std::regex("~\\d+"), "");
+    }
+
+    inline string RemoveBlockMangling_PathElement(string_view name)
+    {
+        assert(!IsIn('#', name));  // # may only have been temporarily present.
+        assert(std::count(name.begin(), name.end(), '$') <= 2);  // can't support non-split paths. only 1 block at a time here
+        string ns{ExtractNamespaceName(name)};
+        return std::regex_replace(string{name}, std::regex("\\$(namespace:)?\\w*\\$\\d*(~\\d+)?"), ns);  // eg: $namespace:word$~1 or "$for$2"
+    }
+
+    //! Change from AZIR form to HLSL form
+    //! eg "/SRG/func(?int)/$bk$1/mem" to "::SRG::mem::func::mem"
+    inline string UnMangle(string_view a_name)
+    {
+        auto parts = SplitPath(a_name);
+        vector<string> out;
+        TransformCopy(parts, out, RemoveBlockMangling_PathElement);
+        string name = Join(out, "/");
+        name = std::regex_replace(name, std::regex("//*"), "::");
+        name = Replace(name, "?", "");
+        name = RemoveMatchedParenthesis(name);
+        return name;
+    }
+
+    //! Attempt to re-mangle a text-form idExpression but no guarantee about validity as an IdentifierUID. Notably predefined won't get their '?'
+    //! If you have a proper AST context, use ExtractNameFromIdExpression instead.
+    //! eg "SRG::mem" to "SRG/mem"
+    inline string ReMangle(string name)
+    {
+        name = std::regex_replace(name, std::regex("::"), "/");
+        return name;
+    }
+
+    //! true  if anywhere in the input, a parenthesis appear
+    //!       even in the middle, e.g:  "/A/f(/?int)/b"
+    inline bool ArgumentDecorationExists(string_view name)
+    {
+        return name.find("(") != string::npos;
+    }
+
+    //! true  if the leaf of the input has this sort of form "fun(/T,?int)"
+    //! false if e.g "/X"; e.g "/F(/T)/a"
+    inline bool IsLeafDecoratedByArguments(string_view name)
+    {
+        return !name.empty() && (name.back() == ')' || ArgumentDecorationExists({ExtractLeaf(name)}));
+    }
+
+    inline size_t CountParameters(string_view mangledFunctionName)
+    {
+        auto leaf = ExtractLeaf(mangledFunctionName);
+        return EndsWith(leaf, "()") || !EndsWith(leaf, ")")  // no-arg function or not-a-function
+            ? 0
+            : 1 + std::count(leaf.begin(), leaf.end(), ',');  // this isn't robust if types may hold comma (and it's the case for generics and function-types)
     }
 
     //! produce a string of the form "(/t1,/t2,/t3)"

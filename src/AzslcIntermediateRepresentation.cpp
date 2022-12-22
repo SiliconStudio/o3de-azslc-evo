@@ -328,7 +328,6 @@ namespace AZ::ShaderCompiler
                 cout << "  storage: " << sub.m_typeInfoExt.m_qualifiers.GetDisplayName() << "\n";
                 cout << "  array dim: \"" << sub.m_typeInfoExt.m_arrayDims.ToString() << "\"\n";
                 cout << "  has sampler state: " << (sub.m_samplerState ? "yes\n" : "no\n");
-                cout << "\n";
                 if (!holds_alternative<monostate>(sub.m_constVal))
                 {
                     cout << "  val: " << ExtractValueAsInt64(sub.m_constVal) << "\n";
@@ -846,7 +845,7 @@ namespace AZ::ShaderCompiler
             else if (isSrg)
             {
                 auto& srgInfo = parentKindInfo->GetSubRefAs<SRGInfo>();
-                auto firstMemberUid = srgInfo.m_implicitStruct.GetMemberFields()[0];
+                auto& firstMemberUid = srgInfo.m_implicitStruct.GetMemberFields()[0];
                 if (firstMemberUid == insertBeforeThisUid)
                 {
                     return {};

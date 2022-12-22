@@ -155,6 +155,9 @@ namespace AZ::ShaderCompiler
         /// Attaches the accumulated non-global attributes to the uid and flushes the list
         void AttachAccumulatedAttributes(const IdentifierUID& uid);
 
+        /// Lookup helper
+        IdAndKind* GetDirectSymbolOrFromAnonymousNS(QualifiedNameView);
+
         //! List of encountered, but pending, attributes
         array< vector<AttributeInfo>, AttributeScope::EndEnumeratorSentinel_ > m_orphanAttributesList;
         //! List of attached attributes (during parsing, encountered attributes accumulates, then flow to their definitive place)

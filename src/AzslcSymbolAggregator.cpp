@@ -106,6 +106,28 @@ namespace AZ::ShaderCompiler
         return m_elastic.DeleteIdentifier(name);
     }
 
+    // This is a canonicalizer for GetIdAndKindInfo in the context of LookupSymbol()
+    // When we lookup if a direct get fails, we need to try a second time to bind
+    // to a symbol that would be in the unique anonymous namespace of that scope.
+    //  e.g
+    //    namespace
+    //    {
+    //       int a;
+    //    }
+    //    a;   // this `a` refers to /$namespace:$/a
+    IdAndKind* SymbolAggregator::GetDirectSymbolOrFromAnonymousNS(QualifiedNameView attempt)
+    {
+        IdAndKind* got = GetIdAndKindInfo(attempt);
+        if (!got)
+        {
+            auto scope = GetParentName(attempt);
+            QualifiedName attempt2{JoinPath(scope, "$namespace:$")};
+            attempt2 = QualifiedName{JoinPath(attempt2, ExtractLeaf(attempt))};
+            got = GetIdAndKindInfo(attempt2);
+        }
+        return got;
+    }
+
     IdAndKind* SymbolAggregator::LookupSymbol(QualifiedNameView scope, UnqualifiedNameView name)
     {
         using namespace std::string_literals;
@@ -139,7 +161,7 @@ namespace AZ::ShaderCompiler
         do
         {
             auto attempt = QualifiedName{JoinPath(path, name)};
-            got = GetIdAndKindInfo(attempt);
+            got = GetDirectSymbolOrFromAnonymousNS(attempt);
             exit = path == "/";
             if (!got)
             {
