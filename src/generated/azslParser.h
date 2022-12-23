@@ -324,13 +324,13 @@ public:
     virtual size_t getRuleIndex() const override;
     NamespaceStatementContext *namespaceStatement();
     AnyStructuredTypeDefinitionStatementContext *anyStructuredTypeDefinitionStatement();
-    VariableDeclarationStatementContext *variableDeclarationStatement();
     AttributedFunctionDefinitionContext *attributedFunctionDefinition();
     AttributedFunctionDeclarationContext *attributedFunctionDeclaration();
     AttributeSpecifierSequenceContext *attributeSpecifierSequence();
     CompilerExtensionStatementContext *compilerExtensionStatement();
     TypeAliasingDefinitionStatementContext *typeAliasingDefinitionStatement();
     AttributedSrgSemanticContext *attributedSrgSemantic();
+    VariableDeclarationStatementContext *variableDeclarationStatement();
     antlr4::tree::TerminalNode *Semi();
 
     virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;

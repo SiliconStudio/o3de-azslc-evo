@@ -376,10 +376,6 @@ azslParser::AnyStructuredTypeDefinitionStatementContext* azslParser::TopLevelDec
   return getRuleContext<azslParser::AnyStructuredTypeDefinitionStatementContext>(0);
 }
 
-azslParser::VariableDeclarationStatementContext* azslParser::TopLevelDeclarationContext::variableDeclarationStatement() {
-  return getRuleContext<azslParser::VariableDeclarationStatementContext>(0);
-}
-
 azslParser::AttributedFunctionDefinitionContext* azslParser::TopLevelDeclarationContext::attributedFunctionDefinition() {
   return getRuleContext<azslParser::AttributedFunctionDefinitionContext>(0);
 }
@@ -402,6 +398,10 @@ azslParser::TypeAliasingDefinitionStatementContext* azslParser::TopLevelDeclarat
 
 azslParser::AttributedSrgSemanticContext* azslParser::TopLevelDeclarationContext::attributedSrgSemantic() {
   return getRuleContext<azslParser::AttributedSrgSemanticContext>(0);
+}
+
+azslParser::VariableDeclarationStatementContext* azslParser::TopLevelDeclarationContext::variableDeclarationStatement() {
+  return getRuleContext<azslParser::VariableDeclarationStatementContext>(0);
 }
 
 tree::TerminalNode* azslParser::TopLevelDeclarationContext::Semi() {
@@ -457,49 +457,49 @@ azslParser::TopLevelDeclarationContext* azslParser::topLevelDeclaration() {
     case 3: {
       enterOuterAlt(_localctx, 3);
       setState(280);
-      variableDeclarationStatement();
+      attributedFunctionDefinition();
       break;
     }
 
     case 4: {
       enterOuterAlt(_localctx, 4);
       setState(281);
-      attributedFunctionDefinition();
+      attributedFunctionDeclaration();
       break;
     }
 
     case 5: {
       enterOuterAlt(_localctx, 5);
       setState(282);
-      attributedFunctionDeclaration();
+      attributeSpecifierSequence();
       break;
     }
 
     case 6: {
       enterOuterAlt(_localctx, 6);
       setState(283);
-      attributeSpecifierSequence();
+      compilerExtensionStatement();
       break;
     }
 
     case 7: {
       enterOuterAlt(_localctx, 7);
       setState(284);
-      compilerExtensionStatement();
+      typeAliasingDefinitionStatement();
       break;
     }
 
     case 8: {
       enterOuterAlt(_localctx, 8);
       setState(285);
-      typeAliasingDefinitionStatement();
+      attributedSrgSemantic();
       break;
     }
 
     case 9: {
       enterOuterAlt(_localctx, 9);
       setState(286);
-      attributedSrgSemantic();
+      variableDeclarationStatement();
       break;
     }
 
@@ -17759,10 +17759,10 @@ azslParser::Initializer::Initializer() {
        0x2, 0x2, 0x115, 0x113, 0x3, 0x2, 0x2, 0x2, 0x116, 0x117, 0x7, 0x2, 
        0x2, 0x3, 0x117, 0x3, 0x3, 0x2, 0x2, 0x2, 0x118, 0x123, 0x5, 0xe, 
        0x8, 0x2, 0x119, 0x123, 0x5, 0x1e, 0x10, 0x2, 0x11a, 0x123, 0x5, 
-       0x34, 0x1b, 0x2, 0x11b, 0x123, 0x5, 0xdc, 0x6f, 0x2, 0x11c, 0x123, 
-       0x5, 0xd8, 0x6d, 0x2, 0x11d, 0x123, 0x5, 0x46, 0x24, 0x2, 0x11e, 
-       0x123, 0x5, 0xde, 0x70, 0x2, 0x11f, 0x123, 0x5, 0xca, 0x66, 0x2, 
-       0x120, 0x123, 0x5, 0xe2, 0x72, 0x2, 0x121, 0x123, 0x7, 0x152, 0x2, 
+       0xdc, 0x6f, 0x2, 0x11b, 0x123, 0x5, 0xd8, 0x6d, 0x2, 0x11c, 0x123, 
+       0x5, 0x46, 0x24, 0x2, 0x11d, 0x123, 0x5, 0xde, 0x70, 0x2, 0x11e, 
+       0x123, 0x5, 0xca, 0x66, 0x2, 0x11f, 0x123, 0x5, 0xe2, 0x72, 0x2, 
+       0x120, 0x123, 0x5, 0x34, 0x1b, 0x2, 0x121, 0x123, 0x7, 0x152, 0x2, 
        0x2, 0x122, 0x118, 0x3, 0x2, 0x2, 0x2, 0x122, 0x119, 0x3, 0x2, 0x2, 
        0x2, 0x122, 0x11a, 0x3, 0x2, 0x2, 0x2, 0x122, 0x11b, 0x3, 0x2, 0x2, 
        0x2, 0x122, 0x11c, 0x3, 0x2, 0x2, 0x2, 0x122, 0x11d, 0x3, 0x2, 0x2, 
