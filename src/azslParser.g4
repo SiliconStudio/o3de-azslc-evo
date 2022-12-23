@@ -18,7 +18,6 @@ compilationUnit:
 topLevelDeclaration:
 		namespaceStatement
     |   anyStructuredTypeDefinitionStatement
-    |   variableDeclarationStatement
     |   attributedFunctionDefinition
     |   attributedFunctionDeclaration
     |   attributeSpecifierSequence
@@ -26,6 +25,7 @@ topLevelDeclaration:
     |   typeAliasingDefinitionStatement // AZSL  specific
 //    |   attributedSrgDefinition       // relic of AZSL 1.x
     |   attributedSrgSemantic           // AZSL  specific
+    |   variableDeclarationStatement
     |   Semi
 ;
 
