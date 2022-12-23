@@ -143,8 +143,7 @@ namespace AZ::ShaderCompiler
                 if (!ContainsAnySub(iteratedSymbolName, "$bk", "$for", "$sw"))
                 {
                     m_out << "namespace "
-                          << ExtractNamespaceName(
-                             GetTranslatedName(iteratedSymbolUid, UsageContext::DeclarationSite))
+                          << ExtractNamespaceName(GetTranslatedName(iteratedSymbolUid, UsageContext::DeclarationSite))
                           << " {\n";
 
                     auto last = m_ir->m_symbols.m_elastic.FindLastOfLevel(iterated);

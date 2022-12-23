@@ -632,7 +632,7 @@ namespace AZ::ShaderCompiler
             if (global && !varInfo.CheckHasStorageFlag(StorageFlag::Rootconstant))
             {
                 throw AzslcOrchestratorException{ORCHESTRATOR_ILLEGAL_GLOBAL_VARIABLE, nameIdentifier,
-                    ConcatString(Decorate("'", idText), " extern global variables are ill-formed in AZSL. You might want an internal variable (static or groupshared), a rootconstant, an option, or to put your resource in a ShaderResourceGroup.") };
+                    ConcatString(Decorate("'", idText), " extern global variables are ill-formed in AZSL. You might want an internal variable (static or groupshared), a rootconstant, an option, or to put your resource in a shader-resource-group.") };
             }
             if (HasStandardInitializer(ctx))
             {
@@ -2000,10 +2000,9 @@ namespace AZ::ShaderCompiler
         assert(!IsIn('#', name));
         UnqualifiedName finalUqName{MangleNamespaceName(name)};
         QualifiedName finalName = MakeFullyQualified(finalUqName);
-        // anonymous namespaces just have empty name (and will thus be $namespace:$)
         // all reopening of the a namespace at the same scope will be the same namespace, including anonymous.
         // (anon namespace is unique per scope, as per C++ standard § 7.3.1.1:
-        // "and all occurrences of unique in a translation unit are replaced by the same identifier")
+        //  "and all occurrences of unique in a translation unit are replaced by the same identifier")
         IdAndKind* previously = m_symbols->GetIdAndKindInfo(finalName);
         if (previously)
         {

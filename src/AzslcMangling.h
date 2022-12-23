@@ -416,20 +416,20 @@ namespace AZ::ShaderCompiler
         return UnqualifiedNameView{RemoveFloatingMark(Slice(anyname, lastSlash + 1, -1))};
     }
 
-    //! MyNS in "$namespace:MyNS$~1"
-    inline string_view ExtractNamespaceName(string_view mangled)
-    {
-        auto colon = mangled.find(":");
-        auto dollar = mangled.find("$", colon + 1);
-        return colon != string_view::npos && dollar != string_view::npos
-            ? Slice(mangled, colon + 1, dollar)
-            : "";
-    }
-
-    //! $namespace:Mine$ in "$namespace:Mine$~1"
+    //! "NS/next" from "NS~1/next"
     inline string RemoveNamespaceReentryUniquifier(string mangled)
     {
         return std::regex_replace(mangled, std::regex("~\\d+"), "");
+    }
+
+    //! MyNS in "MyNS~1"
+    inline string ExtractNamespaceName(string_view mangled)
+    {
+        assert(!IsIn('/', mangled)); // can't handle full paths
+        if (StartsWith(mangled, "$"))
+            return "";
+        assert(!IsIn('$', mangled));
+        return RemoveNamespaceReentryUniquifier(string{mangled});
     }
 
     inline string RemoveBlockMangling_PathElement(string_view name)
@@ -437,7 +437,7 @@ namespace AZ::ShaderCompiler
         assert(!IsIn('#', name));  // # may only have been temporarily present.
         assert(std::count(name.begin(), name.end(), '$') <= 2);  // can't support non-split paths. only 1 block at a time here
         string ns{ExtractNamespaceName(name)};
-        return std::regex_replace(string{name}, std::regex("\\$(namespace:)?\\w*\\$\\d*(~\\d+)?"), ns);  // eg: $namespace:word$~1 or "$for$2"
+        return std::regex_replace(string{name}, std::regex("\\$\\w*\\$\\d*((~\\d+)|(\\d+))?"), ns);  // eg: "$for$2"
     }
 
     //! Change from AZIR form to HLSL form
@@ -502,10 +502,10 @@ namespace AZ::ShaderCompiler
         return ConcatString("$", blockKind, "$", uniquifier++);
     }
 
-    //! create mangling for namespaces eg "$namespace:Material$"
-    inline string MangleNamespaceName(string_view uqIdentifier)
+    //! create mangling for namespaces eg "$unnamed$ in case of anonymous NS.
+    inline string_view MangleNamespaceName(string_view uqIdentifier)
     {
-        return ConcatString("$namespace:", uqIdentifier, "$");
+        return uqIdentifier.empty() ? "$unnamed$" : uqIdentifier;
     }
 
     //! will append a uniquifier to a symbol so that it can exist multiple times in the table.
@@ -659,18 +659,17 @@ namespace AZ::Tests
         assert(JoinPath("", "A") == "/A");
         assert(JoinPath("", "A", JoinPolicy::EmptyMeansEmpty) == "A");
 
-        assert(ExtractNamespaceName("/noSpecialMangling") == "");
-        assert(ExtractNamespaceName("/$namespace:$") == "");
-        assert(ExtractNamespaceName("/$namespace:$~60") == "");
-        assert(ExtractNamespaceName("/$namespace:MyIdentifier_5$~60") == "MyIdentifier_5");
+        assert(ExtractNamespaceName("$unnamed$") == "");
+        assert(ExtractNamespaceName("NS") == "NS");
+        assert(ExtractNamespaceName("NS_5~60") == "NS_5");
 
         assert(RemoveNamespaceReentryUniquifier("truc") == "truc");
-        assert(RemoveNamespaceReentryUniquifier("truc/$namespace:ns$~12/t") == "truc/$namespace:ns$/t");
+        assert(RemoveNamespaceReentryUniquifier("truc/NS~12/t") == "truc/NS/t");
 
         assert(UnMangle("/func(?int, f2())") == "::func");
         assert(UnMangle("/class/member") == "::class::member");
         assert(UnMangle("?matrix4x4") == "matrix4x4");
-        assert(UnMangle("/$namespace:MaterialSRG$44") == "::MaterialSRG");
+        assert(UnMangle("/$unnamed$~2/MaterialSRG") == "::MaterialSRG");
         assert(UnMangle("/main()/$for$12/$bk$4/a") == "::main::a");
 
         assert(IsLeafDecoratedByArguments("/func()"));

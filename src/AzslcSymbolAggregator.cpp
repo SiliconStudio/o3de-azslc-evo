@@ -114,14 +114,14 @@ namespace AZ::ShaderCompiler
     //    {
     //       int a;
     //    }
-    //    a;   // this `a` refers to /$namespace:$/a
+    //    a;   // this `a` refers to /$unnamed$/a
     IdAndKind* SymbolAggregator::GetDirectSymbolOrFromAnonymousNS(QualifiedNameView attempt)
     {
         IdAndKind* got = GetIdAndKindInfo(attempt);
         if (!got)
         {
             auto scope = GetParentName(attempt);
-            QualifiedName attempt2{JoinPath(scope, "$namespace:$")};
+            QualifiedName attempt2{JoinPath(scope, "$unnamed$")};
             attempt2 = QualifiedName{JoinPath(attempt2, ExtractLeaf(attempt))};
             got = GetIdAndKindInfo(attempt2);
         }

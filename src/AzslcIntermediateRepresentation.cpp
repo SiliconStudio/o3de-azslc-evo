@@ -373,7 +373,7 @@ namespace AZ::ShaderCompiler
                     }
                     else
                     {
-                        cout << "    - non-var identifier (type?): '" << ToYaml(param.m_typeInfo, ir, "        ") << "'\n";
+                        cout << "    - non-var identifier (type?): '" << ToYaml(param.m_typeInfo, ir, "") << "'\n";
                     }
                 }
             }
