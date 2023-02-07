@@ -96,7 +96,7 @@ namespace AZ::ShaderCompiler
         const uint32_t numOf32bitConst = GetNumberOf32BitConstants(options, m_ir->m_rootConstantStructUID);
         const RootSigDesc rootSig = BuildSignatureDescription(options, numOf32bitConst);
 
-        //SetupScopeMigrations(options);
+        SetupTranslations(options);
 
         // Emit global attributes
         for (const auto& attr : m_ir->m_symbols.GetGlobalAttributeList())
@@ -293,8 +293,8 @@ namespace AZ::ShaderCompiler
         return m_translations.GetLandingScope(uid.GetName()) == QualifiedNameView{"/"};
     }
 
-    //! setup all scope migrations (srg content to global, local structs to global)
-    void CodeEmitter::SetupScopeMigrations(const Options& options)
+    //! setup logic events that will mutate some code forms using callbacks
+    void CodeEmitter::SetupTranslations(const Options& options)
     {
         m_translations.SetAccessSymbolQueryFunctor([=](QualifiedNameView qnv){return m_ir->GetKindInfo(IdentifierUID{qnv});});
         m_translations.SetGetSeenatFunctor([=](QualifiedNameView qnv) -> vector<Seenat>&
@@ -337,32 +337,9 @@ namespace AZ::ShaderCompiler
             }
         }
 
-        // all SRGs -> erased. Migrate all their contents to global.
+        // for all SRGs
         for (auto& [srgUID, srgInfo] : m_ir->GetOrderedSymbolsOfSubType_2<SRGInfo>())
         {
-            array<decltype(srgInfo->m_structs)*, 6> allSrgMembersUidArrays = {&srgInfo->m_structs,
-                                                                              &srgInfo->m_srViews,
-                                                                              &srgInfo->m_samplers,
-                                                                              &srgInfo->m_CBs,
-                                                                              &srgInfo->m_nonexternVariables,
-                                                                              &srgInfo->m_functions};
-            for (auto& array : allSrgMembersUidArrays)
-            {
-                for (auto& member : *array)
-                {
-                    auto globalScope = QualifiedNameView{"/"};
-                    MigrateASTSubTree(member, globalScope);
-                }
-            }
-
-            // variables get special treatment in case of non-emitConstantBufferBody, because SRG-constants go in a generated-struct: <SRGNAME>_srgConstantStruct
-            for (auto& member : srgInfo->m_implicitStruct.GetMemberFields())
-            {
-                auto globalScope = QualifiedNameView{"/"};
-                auto constantsStruct = MakeSrgConstantsStructName(srgUID);
-                MigrateASTSubTree(member, options.m_emitConstantBufferBody ? globalScope : QualifiedNameView{constantsStruct});
-            }
-
             // add a special behavior for CB, because under cb-body switch, CBs are views, thus must be indexed.
             if (options.m_emitConstantBufferBody)
             {
@@ -386,32 +363,29 @@ namespace AZ::ShaderCompiler
             }
             else // in the else-case, we have dedicated structures for SRG constants, and references need a custom behavior
             {
-                for_each(srgInfo->m_implicitStruct.GetMemberFields().begin(), srgInfo->m_implicitStruct.GetMemberFields().end(), [this, srgUID=srgUID](IdentifierUID fieldUid)
+                // SRG-constants go in a generated-struct: <SRGNAME>_srgConstantStruct
+                // in case of cb-body they go in a sort of "cbuffer X { T global-scope-variable; }" construct, where X is like an inline namespace: thus, land to global.
+                QualifiedName destination = options.m_emitConstantBufferBody ? QualifiedName{"/"} : MakeSrgConstantsStructName(srgUID);
+                for_each(srgInfo->m_implicitStruct.GetMemberFields().begin(), srgInfo->m_implicitStruct.GetMemberFields().end(),
+                         [this, destination = destination, srgUID = srgUID](IdentifierUID fieldUid)
                          {
-                            // the natural suggestion from the translation system is going to be
-                            // to mutate MyRsc::m_f4 to MyRsc_srgConstantStruct::MyRsc_m_f4
-                            // which is the "address" of the variable declaration, but not where the instance reside.
-                            // we need to mutate this to MyRsc_SRGConstantBuffer.MyRsc_m_f4
-                            m_translations.AddCustomBehavior(fieldUid.GetName(),
-                                                            BehaviorEvent::OnReference,
-                                                            [this, srgUID=srgUID](QualifiedNameView, UsageContext, string proposition, ssize_t)
-                                                            {
-                                                                string constantBufferId = UnMangle(MakeSrgConstantsCBName(srgUID));
-                                                                string translatedFieldId = UnMangle(string{ExtractLeaf(ReMangle(proposition))});
-                                                                return constantBufferId + "." + translatedFieldId;
-                                                            });
+                             // First we call register landing scope because this is where we visit the seenat
+                             // and register token location cache for later custom behavior to be able
+                             // to work over EmitText system.
+                             m_translations.RegisterLandingScope(fieldUid, destination);
+                             // the natural suggestion from the translation system is going to be
+                             // to mutate MyRsc::m_f4 to MyRsc_srgConstantStruct::MyRsc_m_f4
+                             // which is a location identifier (qualified path), but not how to refer to the instance,
+                             // we need to mutate this to MyRsc_SRGConstantBuffer.MyRsc_m_f4
+                             m_translations.AddCustomBehavior(fieldUid.GetName(),
+                                                              BehaviorEvent::OnReference,
+                                                              [this, srgUID = srgUID](QualifiedNameView, UsageContext, string proposition, ssize_t)
+                                                              {
+                                                                  string constantBufferId = UnMangle(MakeSrgConstantsCBName(srgUID));
+                                                                  string translatedFieldId = UnMangle(string{ExtractLeaf(ReMangle(proposition))});
+                                                                  return constantBufferId + "." + translatedFieldId;
+                                                              });
                          });
-            }
-        }
-
-        // structs/classes in functions/arguments/generic-parameters, may not be valid HLSL scopes to hold types -> migrate them to global
-        for (auto& [uid, info] : m_ir->GetOrderedSymbolsOfSubType_2<ClassInfo>())
-        {
-            bool isAlreadyGlobal = IsGlobal(uid.GetName());
-            bool isNotContainedInType = !m_ir->IsNestedStructOrEnum(uid);
-            if (!isAlreadyGlobal && isNotContainedInType)
-            {
-                MigrateASTSubTree(uid, globalScope);
             }
         }
 

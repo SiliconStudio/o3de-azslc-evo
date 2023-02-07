@@ -36,7 +36,7 @@ namespace AZ::ShaderCompiler
         //! Create a companion database of mutations on the IR, through which the emitter backend can query symbols scope and names.
         //! The state of changes is stored in the AZ::ShaderCompiler::SymbolTranslation class
         //! @param options  user configuration parsed from command line
-        void SetupScopeMigrations(const Options& options);
+        void SetupTranslations(const Options& options);
 
         //! Execute code emission
         //! @param options  user configuration parsed from command line
