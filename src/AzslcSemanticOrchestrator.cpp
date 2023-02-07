@@ -1998,6 +1998,11 @@ namespace AZ::ShaderCompiler
     void SemanticOrchestrator::MakeAndEnterNamespaceScope(UnqualifiedNameView name, Token* scopeFirstToken, ParserRuleContext* ctx)
     {
         assert(!IsIn('#', name));
+        if (name.empty())
+        {
+            throw AzslcOrchestratorException{ORCHESTRATOR_ANONYMOUS_NAMESPACE_FORBIDDEN,
+                ctx->start, "HLSL does not support anonymous namespaces"};
+        }
         UnqualifiedName finalUqName{MangleNamespaceName(name)};
         QualifiedName finalName = MakeFullyQualified(finalUqName);
         // all reopening of the a namespace at the same scope will be the same namespace, including anonymous.
