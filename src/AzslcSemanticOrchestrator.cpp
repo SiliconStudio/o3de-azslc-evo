@@ -119,7 +119,7 @@ namespace AZ::ShaderCompiler
                 ctx->start, "Only class and SRG may have deported method definitions"};
         }
         IdentifierUID holdingScope = GetCurrentScopeIdAndKind().first;
-        if (! (holdingScope.m_name == "/" || holdingScope == scopeUid))
+        if (!(holdingScope.m_name == "/" || StartsWith(scopeUid.m_name, holdingScope.m_name)))
         {
             throw AzslcOrchestratorException{ORCHESTRATOR_DEFINITION_FOREIGN_SCOPE,
                 ctx->start, ConcatString("definition of (", uqName,
