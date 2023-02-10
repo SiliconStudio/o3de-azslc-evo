@@ -1512,8 +1512,7 @@ namespace AZ::ShaderCompiler
             }
 
             // Make sure the SRG is referencing a registered srgSemantic (and of the correct kind)
-            UnqualifiedName uqName{JoinPath(GetCurrentParentScopeIdAndKind().first.m_name, semanticName)};
-            auto semanticSymbol = LookupSymbol(uqName);
+            auto semanticSymbol = LookupSymbol(UnqualifiedNameView{semanticName});
             if (!semanticSymbol)
             {
                 throw AzslcOrchestratorException{ORCHESTRATOR_INVALID_SEMANTIC_DECLARATION, ctx->start,
@@ -2029,10 +2028,18 @@ namespace AZ::ShaderCompiler
         optional<AttributeInfo> attr = m_symbols->GetAttribute(id, "SRG");
         if (attr && !previously)
         {
+            // verify that we're not already under an SRG scope.
+            if (auto optId = m_symbols->IsUnderShaderResourceGroupScope(finalName, FalseIfSelf))
+            {
+                throw AzslcOrchestratorException{ORCHESTRATOR_NESTED_SRG_FORBIDDEN, scopeFirstToken,
+                    ConcatString("Namespace ", finalName,
+                                 " with SRG attribute cannot exist within the scope of a namespace that is already an SRG itself ",
+                                 "(", *optId, ")")};
+            }
             nsInfo.m_isSrg = true;
             string semantic = std::get<string>(attr->m_argList.front());
 
-            // Register a fake SRGInfo
+            // Register a "phony" SRGInfo to hold SRG data behind the scene
             string idText      = "_srgInfoSymbol_";
             size_t line        = scopeFirstToken->getLine();
             verboseCout << line << ": fake srg decl: " << idText << "\n";

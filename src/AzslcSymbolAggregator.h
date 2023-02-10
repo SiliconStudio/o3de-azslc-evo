@@ -22,6 +22,13 @@ namespace AZ::ShaderCompiler
         ReservedNames
     };
 
+    //! policy enum for IsUnderShaderResourceGroupScope
+    enum HasSrgParentSearchPolicy
+    {
+        FalseIfSelf,
+        TrueIfSelf
+    };
+
     /// Higher level table that holds 2 symbol databases: an intrinsic "fixed", and a user-source driven "elastic"
     class SymbolAggregator
     {
@@ -147,6 +154,9 @@ namespace AZ::ShaderCompiler
         //! Change (in-place) the elastic.m_order vector to shuffle the symbol IDs so that they
         //! get ordered to respect dependencies on each other.
         void ReorderBySymbolDependency();
+
+        //! Identify whether a symbol's parent contains an SRG namespace, and return its ID if yes.
+        optional<IdentifierUID> IsUnderShaderResourceGroupScope(QualifiedNameView, HasSrgParentSearchPolicy = TrueIfSelf) const;
 
         const SymbolTable m_fixed;    // populated once with startup symbols (global namespace and predefined types)
         SymbolTable       m_elastic;  // from user's source

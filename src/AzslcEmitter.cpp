@@ -246,6 +246,12 @@ namespace AZ::ShaderCompiler
 
                 auto* srgSub = m_ir->GetSymbolSubAs<SRGInfo>(iteratedSymbolName);
                 EmitSRG(*srgSub, iteratedSymbolUid, options, rootSig);
+                // now flush the delayed function bodies:
+                for (IdentifierUID& f : m_delayedDefinitions[GetParentName(iteratedSymbolUid.m_name)])
+                {
+                    auto* funcSub = m_ir->GetSymbolSubAs<FunctionInfo>(f.GetName());
+                    EmitFunction(*funcSub, f, EmitFunctionAs::Definition, options);
+                }
                 break;
             }
             // function
@@ -253,12 +259,7 @@ namespace AZ::ShaderCompiler
             {
                 EmitPreprocessorLineDirective(iteratedSymbolName);
 
-                auto* funcSub = m_ir->GetSymbolSubAs<FunctionInfo>(iteratedSymbolName);
-                const bool alreadyDeclared = AlreadyEmittedFunctionDeclaration(iteratedSymbolUid);
-                assert(!funcSub->IsEmpty());
-                const EmitFunctionAs form = (funcSub->HasUniqueDeclarationThroughDefinition() || alreadyDeclared) ?
-                    EmitFunctionAs::Definition : EmitFunctionAs::Declaration;
-                EmitFunction(*funcSub, iteratedSymbolUid, form, options);
+                SmartEmitFunction(iteratedSymbolUid, options);
                 break;
             }
             default: break;
@@ -596,12 +597,8 @@ namespace AZ::ShaderCompiler
                 }
                 else if (info.IsKindOneOf(Kind::Function))
                 {
-                    const auto* func = m_ir->GetSymbolSubAs<FunctionInfo>(uid.m_name);
-                    assert(func);
-
                     m_out << tabs;
-                    EmitFunctionAs form = func->HasUniqueDeclarationThroughDefinition() ? EmitFunctionAs::Definition : EmitFunctionAs::Declaration;
-                    EmitFunction(*func, uid, form, options);
+                    SmartEmitFunction(uid, options);
                 }
                 else
                 {
@@ -765,6 +762,24 @@ namespace AZ::ShaderCompiler
     bool CodeEmitter::AlreadyEmittedFunctionDefinition(const IdentifierUID& uid) const
     {
         return m_alreadyEmittedFunctionDefinitions.find(uid) != m_alreadyEmittedFunctionDefinitions.end();
+    }
+
+    void CodeEmitter::SmartEmitFunction(const IdentifierUID& uid, const Options& options)
+    {
+        auto* funcSub = m_ir->GetSymbolSubAs<FunctionInfo>(uid.GetName());
+        bool alreadyDeclared = AlreadyEmittedFunctionDeclaration(uid);
+        bool twoInOne = funcSub->HasUniqueDeclarationThroughDefinition();
+        EmitFunctionAs form = (twoInOne || alreadyDeclared) ? EmitFunctionAs::Definition : EmitFunctionAs::Declaration;
+        optional<IdentifierUID> holdingSrg = m_ir->m_symbols.IsUnderShaderResourceGroupScope(uid.GetName());
+        if (holdingSrg                            // even deeply (e.g method in class in namespace in SRG)
+            && funcSub->m_containsRefsToSrgView)  // any of buffer/texture/srg-constant
+        {
+            form = EmitFunctionAs::Declaration;   // delay definition.
+            // remember to insert a deported definition after the emission of the corresponding SRGInfo
+            m_delayedDefinitions[holdingSrg->m_name].push_back(uid);
+        }
+        EmitFunction(*funcSub, uid, form, options);
+
     }
 
     void CodeEmitter::EmitFunction(const FunctionInfo& funcSub, const IdentifierUID& uid, EmitFunctionAs entityConfiguration, const Options& options)

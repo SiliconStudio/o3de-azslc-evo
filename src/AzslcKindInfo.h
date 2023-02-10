@@ -788,6 +788,7 @@ namespace AZ::ShaderCompiler
         bool                      m_isVirtual    = false;     //!< is a method from an interface
         vector< IdentifierUID >   m_overrides;                //!< list of implementing functions in child classes
         optional< IdentifierUID > m_base;   //!< points to the overridden function in the base interface, if applies. only supports one base
+        bool                      m_containsRefsToSrgView = false;  //!< informative flag about function's body content. Will be set as a side effect of binding dependency analysis
         struct Parameter
         {
             IdentifierUID m_varId;

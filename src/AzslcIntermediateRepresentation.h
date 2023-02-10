@@ -75,16 +75,10 @@ namespace AZ::ShaderCompiler
         }
 
         //! Query if a symbol is a structure/class/enum nested in a structure or class
-        bool IsNestedStruct(const IdentifierUID& symbol) const
+        bool IsNestedStructOrEnum(const IdentifierUID& symbol) const
         {
             return GetKind(symbol).IsOneOf(Kind::Class, Kind::Struct, Kind::Enum)
                 && GetKind({GetParentName(symbol.GetName())}).IsOneOf(Kind::Class, Kind::Struct);
-        }
-
-        //! overload from IdentifierUID
-        bool IsNestedStructOrEnum(const IdentifierUID& symbol) const
-        {
-            return IsNestedStruct(symbol);
         }
 
         //! Extracts the contained SubInfo from a symbol lookup

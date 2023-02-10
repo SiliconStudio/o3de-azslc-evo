@@ -75,6 +75,7 @@ namespace AZ::ShaderCompiler
         ORCHESTRATOR_CONSTANT_FOLDING_FAULT = 50u,
         ORCHESTRATOR_TYPE_LOOKUP_FAULT = 51u,
         ORCHESTRATOR_ANONYMOUS_NAMESPACE_FORBIDDEN = 52u,
+        ORCHESTRATOR_NESTED_SRG_FORBIDDEN = 53u,
 
 
         // Treat all compiler warnings as errors

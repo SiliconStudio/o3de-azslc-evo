@@ -234,7 +234,10 @@ namespace AZ::ShaderCompiler
             if (isSlash || isLast)
             {
                 size_t count = cp - start + (isLast && !isSlash ? 1 : 0);
-                action(PathPart{path.substr(start, count), start, count});
+                if (GetFlow_Invoke(action, PathPart{path.substr(start, count), start, count}).flow == Flow::Break)
+                {
+                    break;
+                }
                 start = cp + 1;
                 if (isSlash && isLast) // we need to call again for the end part, to signal it exists but is empty
                 {
@@ -574,6 +577,12 @@ namespace AZ::ShaderCompiler
         }
 
         friend std::ostream& operator << (std::ostream& stream, const IdentifierUID& id)
+        {
+            stream << id.m_name;
+            return stream;
+        }
+
+        friend Streamable& operator << (Streamable& stream, const IdentifierUID& id)
         {
             stream << id.m_name;
             return stream;

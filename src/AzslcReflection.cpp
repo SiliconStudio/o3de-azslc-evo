@@ -874,6 +874,8 @@ namespace AZ::ShaderCompiler
                                                     seenat.m_where.m_line, seenat.m_where.m_charPos,
                                                     ConcatString("Recursion not permitted in AZSL. ", uid.m_name, " in ", encloser.m_name));
                     }
+                    // flag that function while we're here, this piece of information is of interest for body deportation (to solve transpilation problems due to migrated views)
+                    m_ir->GetSymbolSubAs<FunctionInfo>(encloser.GetName())->m_containsRefsToSrgView = true;
                     if (IsPotentialEntryPoint(encloser))  // reduce a bit the amount of unused data by filtering by potential entry points
                     {
                         output.insert(encloser);
@@ -904,7 +906,7 @@ namespace AZ::ShaderCompiler
         }
     }
 
-    void CodeReflection::DumpResourceBindingDependencies(const Options& options) const
+    Json::Value CodeReflection::RunResourceBindingDependenciesAnalysis(const Options& options) const
     {
         uint32_t numOf32bitConst  = GetNumberOf32BitConstants(options, m_ir->m_rootConstantStructUID);
         RootSigDesc rootSignature = BuildSignatureDescription(options, numOf32bitConst);
@@ -1002,6 +1004,11 @@ namespace AZ::ShaderCompiler
             }
         }
 
-        m_out << srgRoot;
+        return srgRoot;
+    }
+
+    void CodeReflection::DumpResourceBindingDependencies(const Options& options) const
+    {
+        m_out << RunResourceBindingDependenciesAnalysis(options);
     }
 }

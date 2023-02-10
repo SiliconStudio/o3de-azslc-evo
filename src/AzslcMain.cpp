@@ -700,6 +700,7 @@ int main(int argc, const char* argv[])
                 std::ostream& out{useOutputFile ? mainOutFile : std::cout};
 
                 CodeReflection reflecter{&ir, &tokens, out};
+                reflecter.RunResourceBindingDependenciesAnalysis(emitOptions);  // run this once after middle end and before emitter so that we have FunctionInfo flags ready
 
                 // Lambda to create an output stream and perform an output action
                 auto prepareOutputAndCall = [&](const string &suffix, std::function<void(CodeReflection&)> action)

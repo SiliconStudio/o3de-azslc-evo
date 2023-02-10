@@ -40,9 +40,14 @@ namespace AZ::ShaderCompiler
         //! @param options  user configuration parsed from command line
         void DumpVariantList(const Options& options) const;
 
-        //! Reflect extended resource binding information.
+        //! Reflect extended resource binding information in a Json node,
         //! Such as which stage function is client of a resource; and what are the registers of the descriptors.
+        //! side effect note: running that method will set the m_containsRefsToSrgView flags of FunctionInfo symbols in the IR.
         //! @param options  user configuration parsed from command line
+        //! @return the json tree immediately dump-able to ostream
+        Json::Value RunResourceBindingDependenciesAnalysis(const Options& options) const;
+
+        //! Executes m_out << RunResourceBindingDependenciesAnalysis()
         void DumpResourceBindingDependencies(const Options& options) const;
 
     private:

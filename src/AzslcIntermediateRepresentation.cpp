@@ -318,6 +318,13 @@ namespace AZ::ShaderCompiler
             cout << "  references:\n" << ToYaml(sym.GetSeenats().begin(), sym.GetSeenats().end(), "    ");
             switch (sym.GetKind())
             {
+            case Kind::Namespace:
+            {
+                auto& sub = sym.GetSubRefAs<NamespaceInfo>();
+                cout << "  is srg: " << std::boolalpha << sub.m_isSrg << "\n";
+                cout << "  re-entries: " << Decorate("[", Join(sub.m_reEntries, ","), "]") << "\n";
+            }
+            break;
             case Kind::Variable:
             {
                 auto& sub = sym.GetSubRefAs<VarInfo>();
@@ -327,7 +334,7 @@ namespace AZ::ShaderCompiler
                 cout << "  type:\n" << ToYaml(sub.m_typeInfoExt, ir, "    ") << "\n";
                 cout << "  storage: " << sub.m_typeInfoExt.m_qualifiers.GetDisplayName() << "\n";
                 cout << "  array dim: \"" << sub.m_typeInfoExt.m_arrayDims.ToString() << "\"\n";
-                cout << "  has sampler state: " << (sub.m_samplerState ? "yes\n" : "no\n");
+                cout << "  has sampler state: " << !!sub.m_samplerState << "\n";
                 if (!holds_alternative<monostate>(sub.m_constVal))
                 {
                     cout << "  val: " << ExtractValueAsInt64(sub.m_constVal) << "\n";

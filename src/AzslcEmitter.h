@@ -84,6 +84,9 @@ namespace AZ::ShaderCompiler
 
         void EmitAttribute(const AttributeInfo& attrInfo) const;
 
+        //! Determine declaration/definition form automatically
+        void SmartEmitFunction(const IdentifierUID& uid, const Options& options);
+
         void EmitFunction(const FunctionInfo& funcSub, const IdentifierUID& id, EmitFunctionAs entityConfiguration, const Options& options);
 
         void EmitTypeAlias(const IdentifierUID& uid, const TypeAliasInfo& aliasInfo, const Options& options) const;
@@ -214,9 +217,19 @@ namespace AZ::ShaderCompiler
         //! Throws an exception if it is an undefined ShaderResourceGroup field/variable.
         void IfIsSrgMemberValidateIsDefined(antlr4::Token* token, TokenToAst::AstNode* nodeFromToken) const;
 
+        //! This is a readability function for class emission code. Serves for HLSL declarator of classes
+        string EmitInheritanceList(const ClassInfo& clInfo);
+
+        //! Helper function (for solving problem of migrated SRG content referred to by code in functions)
+        bool IsUnderShaderResourceGroupScope(QualifiedNameView name) const;
+
         SymbolTranslation m_translations;
+
         unordered_set<IdentifierUID> m_alreadyEmittedFunctionDeclarations;
         unordered_set<IdentifierUID> m_alreadyEmittedFunctionDefinitions;
+        using MapOfQNameToIdVector = unordered_map<QualifiedName, vector<IdentifierUID>>;
+        MapOfQNameToIdVector m_delayedDefinitions; // for functions with references to views
+
         map<size_t, size_t> m_alreadyEmittedPreprocessorLineDirectives;
 
         IdentifierUID m_shaderVariantFallbackUid;
@@ -233,13 +246,5 @@ namespace AZ::ShaderCompiler
         mutable NewLineCounterStream m_out;
 
         PreprocessorLineDirectiveFinder* m_lineFinder;
-
-
-
-        //! This is a readability function for class emission code. Serves for HLSL declarator of classes
-        string EmitInheritanceList(const ClassInfo& clInfo);
-
-        //! Given an SRG parameter, determines the space it belongs to based on the platform
-        int ResolveBindingSpace(const RootSigDesc::SrgParamDesc& bindInfo, BindingPair::Set bindSet) const;
     };
 }

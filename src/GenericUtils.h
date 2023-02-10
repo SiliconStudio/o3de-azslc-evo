@@ -636,6 +636,37 @@ namespace AZ
         RemoveDuplicatesKeepOrder(lhs);
     }
 
+    //! For customizable flow control in algorithms
+    struct Flow
+    {
+        enum { Continue, Break } flow = Continue;
+    };
+
+    template< class Functor, class... Args >
+    struct ReturnsFlow : std::is_same< std::result_of_t<Functor(Args...)>, Flow > {};
+
+    //! Function to transparently call a functor with unknown return type, and get a Flow for sure as return type.
+    template< class Functor, class... Args,
+        typename std::enable_if_t<
+            ReturnsFlow<Functor, Args...>::value
+        >* = nullptr
+    >
+    Flow GetFlow_Invoke(Functor&& f, Args... args)
+    {
+        return f(std::forward<Args>(args)...);
+    }
+
+    //! Version for void and other accidental return types that the invoking algorithm can't use/wants to ignore.
+    template< class Functor, class... Args,
+        typename std::enable_if_t<
+            !ReturnsFlow<Functor, Args...>::value
+        >* = nullptr
+    >
+    Flow GetFlow_Invoke(Functor&& f, Args... args)
+    {
+        f(std::forward<Args>(args)...);
+        return {};
+    }
 }
 
 #ifndef NDEBUG

@@ -382,4 +382,22 @@ namespace AZ::ShaderCompiler
         }
         m_elastic.m_order = std::move(solver.m_order);
     }
+
+    optional<IdentifierUID> SymbolAggregator::IsUnderShaderResourceGroupScope(QualifiedNameView name, HasSrgParentSearchPolicy selfPolicy /*= TrueIfSelf*/) const
+    {
+        QualifiedName srgPath{"/"};
+        bool underSrg = false;
+        ForEachPathPart(name, [&](PathPart&& pp) -> Flow
+                        {
+                            srgPath = QualifiedName{JoinPath(srgPath, pp.m_slice)};
+                            if (auto* nsInfo = this->GetAsSub<NamespaceInfo>({srgPath}))
+                            {
+                                underSrg = nsInfo->m_isSrg;
+                            }
+                            return {underSrg ? Flow::Break : Flow::Continue};
+                        });
+        bool self = srgPath == name;
+        bool allowSelf = selfPolicy == TrueIfSelf;
+        return underSrg && (!self || allowSelf) ? optional{IdentifierUID{srgPath}} : none;
+    }
 }  // end of namespace AZ::ShaderCompiler
