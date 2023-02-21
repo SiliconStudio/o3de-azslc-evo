@@ -85,9 +85,9 @@ namespace AZ::ShaderCompiler
         void EmitAttribute(const AttributeInfo& attrInfo) const;
 
         //! Determine declaration/definition form automatically
-        void SmartEmitFunction(const IdentifierUID& uid, const Options& options);
+        void SmartEmitFunction(const IdentifierUID& uid, QualifiedNameView currentEmissionScope, const Options& options);
 
-        void EmitFunction(const FunctionInfo& funcSub, const IdentifierUID& id, EmitFunctionAs entityConfiguration, const Options& options);
+        void EmitFunction(const IdentifierUID& id, const FunctionInfo& funcSub, QualifiedNameView currentEmissionScope, EmitFunctionAs entityConfiguration, const Options& options);
 
         void EmitTypeAlias(const IdentifierUID& uid, const TypeAliasInfo& aliasInfo, const Options& options) const;
 

@@ -246,11 +246,12 @@ namespace AZ::ShaderCompiler
 
                 auto* srgSub = m_ir->GetSymbolSubAs<SRGInfo>(iteratedSymbolName);
                 EmitSRG(*srgSub, iteratedSymbolUid, options, rootSig);
+                QualifiedNameView currentScope = GetParentName(iteratedSymbolName);
                 // now flush the delayed function bodies:
                 for (IdentifierUID& f : m_delayedDefinitions[GetParentName(iteratedSymbolUid.m_name)])
                 {
                     auto* funcSub = m_ir->GetSymbolSubAs<FunctionInfo>(f.GetName());
-                    EmitFunction(*funcSub, f, EmitFunctionAs::Definition, options);
+                    EmitFunction(f, *funcSub, currentScope, EmitFunctionAs::Definition, options);
                 }
                 break;
             }
@@ -259,7 +260,7 @@ namespace AZ::ShaderCompiler
             {
                 EmitPreprocessorLineDirective(iteratedSymbolName);
 
-                SmartEmitFunction(iteratedSymbolUid, options);
+                SmartEmitFunction(iteratedSymbolUid, GetParentName(iteratedSymbolName), options);
                 break;
             }
             default: break;
@@ -568,6 +569,8 @@ namespace AZ::ShaderCompiler
                   << "\n{\n"; // conclusion of "class X : ::Stuff {"
         }
 
+        QualifiedNameView thisScope{GetParentName(structuredSymName)};
+
         for (const IdentifierUID& memberUid : classInfo.GetOrderedMembers())
         {
             if (structuredSymName.empty() || m_translations.GetLandingScope(memberUid.GetName()) == structuredSymName)
@@ -598,7 +601,7 @@ namespace AZ::ShaderCompiler
                 else if (info.IsKindOneOf(Kind::Function))
                 {
                     m_out << tabs;
-                    SmartEmitFunction(uid, options);
+                    SmartEmitFunction(uid, thisScope, options);
                 }
                 else
                 {
@@ -764,7 +767,11 @@ namespace AZ::ShaderCompiler
         return m_alreadyEmittedFunctionDefinitions.find(uid) != m_alreadyEmittedFunctionDefinitions.end();
     }
 
-    void CodeEmitter::SmartEmitFunction(const IdentifierUID& uid, const Options& options)
+    // augment the declaration/definition state tracker with a delayer bag,
+    // in order to have function bodies that are part of SRG and defined too early
+    // to access SRG constants or views, appear later in emitted code.
+    // (typically at the point of final closure of the SRG namespace, after emission of the SRGInfo hidden symbol)
+    void CodeEmitter::SmartEmitFunction(const IdentifierUID& uid, QualifiedNameView currentEmissionScope, const Options& options)
     {
         auto* funcSub = m_ir->GetSymbolSubAs<FunctionInfo>(uid.GetName());
         bool alreadyDeclared = AlreadyEmittedFunctionDeclaration(uid);
@@ -778,17 +785,17 @@ namespace AZ::ShaderCompiler
             // remember to insert a deported definition after the emission of the corresponding SRGInfo
             m_delayedDefinitions[holdingSrg->m_name].push_back(uid);
         }
-        EmitFunction(*funcSub, uid, form, options);
-
+        EmitFunction(uid, *funcSub, currentEmissionScope, form, options);
     }
 
-    void CodeEmitter::EmitFunction(const FunctionInfo& funcSub, const IdentifierUID& uid, EmitFunctionAs entityConfiguration, const Options& options)
+    void CodeEmitter::EmitFunction(const IdentifierUID& uid, const FunctionInfo& funcSub, QualifiedNameView currentEmissionScope, EmitFunctionAs entityConfiguration, const Options& options)
     {
         // reproduce the signature `[attr] [modifiers] rettype [classnameFQN::] Name(params) [semantics]`
 
         bool emitAsDeclaration = entityConfiguration == EmitFunctionAs::Declaration;
         bool emitAsDefinition  = entityConfiguration == EmitFunctionAs::Definition;
 
+        // Uses a side-effect state tracker to avoid redundant forward declarations
         bool riskDoubleEmission = emitAsDeclaration && AlreadyEmittedFunctionDeclaration(uid)
                                || emitAsDefinition && AlreadyEmittedFunctionDefinition(uid);
         bool undefinedFunction = funcSub.IsUndefinedFunction();
@@ -814,18 +821,33 @@ namespace AZ::ShaderCompiler
         // emit return type:
         m_out << GetTranslatedName(funcSub.m_returnType, UsageContext::ReferenceSite, options, forbidden) << " ";
         // emit Name
-        if (entityConfiguration == EmitFunctionAs::Definition && funcSub.HasDeportedDefinition())
+        if (entityConfiguration == EmitFunctionAs::Definition)
         {
-            // emit fully qualified function name (with classname prefix).
-            // surrounded by round braces because otherwise clang's greedy parsing will wreak havoc.
-            // indeed `RetType ::Class::Method() {}` will be parsed as `RetType::Class::Method(){}` one id-expr.
-            // since we can't use trailing return type in HLSL, the fix is to use round braces.
-            //  solution from https://stackoverflow.com/a/3185232/893406
-            m_out << "(" << GetTranslatedName(uid, UsageContext::ReferenceSite) << ")";
+            // Get the transpiled name for prototype emission using "refernce" context strategy.
+            // Think of it as a reference to the initial bodiless declaration.
+            // This should work for simultaneous declare/define cases since the function is
+            // immediately emitted in its standing scope (therefore least qualification ends up being the leaf)
+            auto qualifiedFunctionName = GetTranslatedName(uid, UsageContext::ReferenceSite);
+            if (funcSub.HasDeportedDefinition())
+            {
+                // *: For cases that would have remained fully qualified (with classname prefix),
+                // surround by round braces. Because otherwise, since whitespaces are ignored:
+                // `RetType ::Class::Method() {}` will be parsed as `RetType::Class::Method(){}` one id-expr.
+                // since we can't use trailing return type in HLSL, the fix is to use round braces.
+                //  solution from https://stackoverflow.com/a/3185232/893406
+                m_out << "(" << qualifiedFunctionName << ")";
+            }
+            else
+            {
+                // diminish the qualification to the minimal because free function prototypes
+                // do not accept the parenthesised name protection trick*
+                qualifiedFunctionName = m_ir->m_symbols.FindLeastQualifiedName(currentEmissionScope, uid);
+                m_out << UnMangle(qualifiedFunctionName);
+            }
         }
         else
         {
-            // emit leaf function name (in AZSL all declaration sites are Identifier and not idExpressions)
+            // emit leaf function name (in HLSL, declaration sites are Identifier and not idExpressions)
             m_out << GetTranslatedName(uid, UsageContext::DeclarationSite);
         }
         // emit parameters:
@@ -853,7 +875,7 @@ namespace AZ::ShaderCompiler
             m_out << "\n";
             EmitTranspiledTokens(blockInterval);
             m_out << "\n\n";
-            m_alreadyEmittedFunctionDefinitions.insert(uid);
+            m_alreadyEmittedFunctionDefinitions.insert(uid);  // side effect state tracker
         }
     }
 
